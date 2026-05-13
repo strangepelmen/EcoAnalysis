@@ -44,7 +44,7 @@
   </div>
 </header>
 
-<!-- HERO SECTION (single line, no divider, premium slow glow) -->
+<!-- HERO SECTION -->
 <section class="hero">
   <div class="hero-orb hero-orb--1"></div>
   <div class="hero-orb hero-orb--2"></div>
@@ -150,14 +150,11 @@
     <div class="section-label">Анализ</div>
     <h2 class="section-title">Анализ листа</h2>
     <div class="plant-picker reveal">
-      <p class="plant-picker__label">Выберите вид растения:</p>
-      <div class="plant-options">
-        <button class="plant-btn" data-plant="salix-alba"><span class="plant-btn__icon">🌳</span><span>Ива Белая</span></button>
-        <button class="plant-btn" data-plant="salix-caprea"><span class="plant-btn__icon">🍃</span><span>Ива Козья</span></button>
-        <button class="plant-btn" data-plant="populus-balsamifera"><span class="plant-btn__icon">🌲</span><span>Тополь Бальзамический</span></button>
-        <button class="plant-btn" data-plant="betula-pendula"><span class="plant-btn__icon">🌿</span><span>Берёза Повислая</span></button>
-        <button class="plant-btn" data-plant="acer-platanoides"><span class="plant-btn__icon">🍁</span><span>Клён Остролистный</span></button>
-        <button class="plant-btn" data-plant="tilia-cordata"><span class="plant-btn__icon">🌸</span><span>Липа Мелколистная</span></button>
+      <p class="plant-picker__label">1. Выберите вид растения <span class="plant-picker__req">— обязательно перед загрузкой фото</span></p>
+      <div class="plant-select-wrapper">
+        <select id="plantSelect" class="plant-select">
+          <option value="" selected>🌱 Выберите вид растения</option>
+        </select>
       </div>
     </div>
     <div class="calibration-hint reveal">
@@ -169,7 +166,7 @@
         <div class="upload-zone__icon">📁</div>
         <p class="upload-zone__title">Перетащите фотографию листа</p>
         <p class="upload-zone__sub">или выберите файл (рекомендуется белый фон)</p>
-        <button class="btn btn--primary" id="uploadBtn">Выбрать файл</button>
+        <button class="btn btn--primary" id="uploadBtn" disabled>Выбрать файл</button>
         <input type="file" id="fileInput" accept="image/*" style="display:none">
       </div>
     </div>
@@ -221,7 +218,19 @@
       </div>
       <div class="diagnosis-block" id="diagnosisBlock"></div>
       <h3 class="result-card__subtitle">Измеренные параметры ФА</h3>
-      <div class="table-wrap"><table class="params-table"><thead><tr><th>Параметр</th><th>Лево</th><th>Право</th><th>Асимметрия</th></tr></thead><tbody id="parametersTable"></tbody></table></div>
+      <div class="table-wrap" id="faTableWrapper">
+        <table class="params-table" id="parametersTable">
+          <thead>
+            <tr>
+              <th>Параметр</th>
+              <th>Левая половина</th>
+              <th>Правая половина</th>
+              <th>Асимметрия</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
       <div class="result-card__map-section"><p>Поделитесь результатом анонимно — ваша метка с двумя индексами появится у всех участников на карте.</p><button class="btn btn--primary btn--wide" id="addToMapBtn">📍 Добавить на карту</button></div>
     </div>
   </div>
