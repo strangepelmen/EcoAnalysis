@@ -1,351 +1,44 @@
 <!DOCTYPE html>
-
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ЭкоАнализ | Оценка качества среды</title>
+<link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-/* ===== RESET & BASE ===== */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --green-1:#0d3d1e;--green-2:#155230;--green-3:#1a6b3e;--green-4:#22c55e;--green-5:#4ade80;--green-6:#bbf7d0;
-  --accent:#f0b429;--accent2:#38bdf8;--red:#ef4444;--orange:#f97316;
-  --bg:#f6faf7;--bg-alt:#edf7f0;--surface:#ffffff;--surface2:#f0faf3;
-  --text:#0f1f14;--text-2:#2d5a3f;--text-3:#5a8a6e;--text-muted:#8ab39a;
-  --border:#c8e6d3;--shadow:0 4px 24px rgba(13,61,30,.10);
-  --footer-bg:#0d1f12;
-  --radius:16px;--radius-lg:24px;
-  --header-h:68px;
-  --transition:all .35s cubic-bezier(.4,0,.2,1);
-}
-[data-theme="dark"]{
-  --bg:#0a1810;--bg-alt:#0e2218;--surface:#122b1a;--surface2:#163320;
-  --text:#e6f4ec;--text-2:#88c4a0;--text-3:#4d8a65;--text-muted:#2a5a3c;
-  --border:#1e4030;--shadow:0 4px 32px rgba(0,0,0,.5);
-  --footer-bg:#050e08;
-}
-html{scroll-behavior:smooth;font-size:16px}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;transition:background .4s,color .4s}
-.container{max-width:1160px;margin:0 auto;padding:0 24px}
-img{max-width:100%;display:block}
-button{cursor:pointer;font-family:inherit;border:none;outline:none}
-a{text-decoration:none;color:inherit}
-
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(–bg)}::-webkit-scrollbar-thumb{background:var(–green-4);border-radius:99px}
-
-/* ===== HEADER ===== */
-.site-header{position:fixed;top:0;left:0;right:0;z-index:200;height:var(–header-h);display:flex;align-items:center;background:rgba(246,250,247,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(–border);transition:var(–transition)}
-[data-theme=“dark”] .site-header{background:rgba(10,24,16,.88)}
-.header-inner{display:flex;align-items:center;justify-content:space-between;max-width:1160px;margin:0 auto;padding:0 24px;width:100%}
-.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.15rem;color:var(–green-1)}
-[data-theme=“dark”] .logo{color:var(–green-5)}
-.logo-leaf{font-size:1.4rem;animation:leafSway 3s ease-in-out infinite}
-@keyframes leafSway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
-.main-nav{display:flex;align-items:center;gap:4px}
-.nav-link{padding:6px 14px;border-radius:99px;color:var(–text-2);font-size:.875rem;font-weight:500;transition:var(–transition)}
-.nav-link:hover{background:var(–green-6);color:var(–green-1)}
-[data-theme=“dark”] .nav-link:hover{background:var(–surface2);color:var(–green-5)}
-.theme-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;margin-left:8px}
-.toggle-track{width:44px;height:24px;background:var(–border);border-radius:99px;position:relative;transition:var(–transition)}
-.toggle-track:has(input:checked){background:var(–green-3)}
-.toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:var(–transition);box-shadow:0 2px 6px rgba(0,0,0,.2)}
-input:checked~.toggle-track .toggle-thumb,
-.toggle-track:has(input:checked) .toggle-thumb{left:23px}
-.toggle-icons{display:flex;gap:4px;font-size:.75rem}
-.burger{display:none;flex-direction:column;gap:5px;background:none;padding:4px}
-.burger span{display:block;width:22px;height:2px;background:var(–text-2);border-radius:2px;transition:var(–transition)}
-
-/* ===== HERO ===== */
-.hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding-top:var(–header-h)}
-.hero-bg-canvas{position:absolute;inset:0;z-index:0}
-.hero-particles{position:absolute;inset:0;z-index:1;pointer-events:none}
-.hero-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.55;animation:orbFloat 8s ease-in-out infinite}
-.hero-orb–1{width:480px;height:480px;background:radial-gradient(circle,#22c55e60,#0d3d1e20);top:-10%;left:-5%;animation-delay:0s}
-.hero-orb–2{width:360px;height:360px;background:radial-gradient(circle,#4ade8050,#22c55e10);top:30%;right:-8%;animation-delay:-3s}
-.hero-orb–3{width:280px;height:280px;background:radial-gradient(circle,#f0b42940,#22c55e20);bottom:5%;left:35%;animation-delay:-5s}
-@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.04)}}
-.hero-3d-scene{position:absolute;right:5%;top:50%;transform:translateY(-50%);width:420px;height:420px;z-index:2;pointer-events:none}
-.leaf-3d{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:200px;filter:drop-shadow(0 24px 48px rgba(34,197,94,.35));animation:leaf3dFloat 6s ease-in-out infinite;transform-style:preserve-3d}
-.leaf-3d-glow{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);width:200px;height:40px;background:radial-gradient(ellipse,rgba(34,197,94,.4) 0%,transparent 70%);filter:blur(12px);animation:glowPulse 6s ease-in-out infinite}
-@keyframes leaf3dFloat{0%,100%{transform:translateY(0) rotateX(5deg) rotateY(-5deg) rotateZ(2deg)}25%{transform:translateY(-18px) rotateX(-3deg) rotateY(8deg) rotateZ(-2deg)}50%{transform:translateY(-8px) rotateX(8deg) rotateY(3deg) rotateZ(3deg)}75%{transform:translateY(-22px) rotateX(-5deg) rotateY(-6deg) rotateZ(-1deg)}}
-@keyframes glowPulse{0%,100%{opacity:.6;transform:translateX(-50%) scaleX(1)}50%{opacity:1;transform:translateX(-50%) scaleX(1.2)}}
-.hero-content{position:relative;z-index:3;max-width:600px}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(–green-6);color:var(–green-1);padding:6px 16px;border-radius:99px;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:24px;animation:fadeUp .8s .1s both}
-[data-theme=“dark”] .hero-eyebrow{background:rgba(74,222,128,.15);color:var(–green-5)}
-.hero-title{font-family:‘Playfair Display’,serif;font-size:clamp(2.6rem,6vw,4.4rem);line-height:1.1;color:var(–green-1);margin-bottom:20px;animation:fadeUp .8s .2s both}
-[data-theme=“dark”] .hero-title{color:var(–green-5)}
-.hero-title em{font-style:italic;color:var(–green-3);position:relative}
-[data-theme=“dark”] .hero-title em{color:var(–green-4)}
-.hero-title em::after{content:’’;position:absolute;bottom:0;left:0;right:0;height:3px;background:var(–green-4);border-radius:2px;transform:scaleX(0);transform-origin:left;animation:underlineGrow 1s .8s both}
-@keyframes underlineGrow{to{transform:scaleX(1)}}
-.hero-sub{color:var(–text-2);font-size:1.1rem;margin-bottom:36px;animation:fadeUp .8s .3s both;line-height:1.7}
-.hero-actions{display:flex;gap:16px;flex-wrap:wrap;animation:fadeUp .8s .4s both}
-.hero-stats{display:flex;gap:32px;margin-top:48px;animation:fadeUp .8s .5s both}
-.hero-stat{text-align:center}
-.hero-stat__num{font-family:‘Playfair Display’,serif;font-size:2rem;font-weight:700;color:var(–green-4);line-height:1}
-.hero-stat__label{font-size:.75rem;color:var(–text-3);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
-.hero-wave{position:absolute;bottom:0;left:0;right:0;z-index:4;line-height:0}
-.hero-wave svg{width:100%;height:80px}
-.hero-scroll-indicator{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);z-index:5;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:.7;animation:fadeUp 1s .9s both}
-.scroll-mouse{width:24px;height:36px;border:2px solid var(–green-4);border-radius:12px;position:relative}
-.scroll-dot{width:4px;height:8px;background:var(–green-4);border-radius:2px;position:absolute;top:6px;left:50%;transform:translateX(-50%);animation:scrollBounce 1.4s ease-in-out infinite}
-@keyframes scrollBounce{0%,100%{top:6px;opacity:1}50%{top:16px;opacity:.3}}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-
-/* ===== BUTTONS ===== */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:99px;font-weight:600;font-size:.9rem;transition:var(–transition);border:2px solid transparent}
-.btn–primary{background:var(–green-4);color:#fff;border-color:var(–green-4)}
-.btn–primary:hover{background:var(–green-3);border-color:var(–green-3);transform:translateY(-2px);box-shadow:0 8px 24px rgba(34,197,94,.35)}
-.btn–ghost{background:transparent;color:var(–green-3);border-color:var(–border)}
-.btn–ghost:hover{background:var(–green-6);border-color:var(–green-4);transform:translateY(-2px)}
-[data-theme=“dark”] .btn–ghost{color:var(–green-5);border-color:var(–border)}
-[data-theme=“dark”] .btn–ghost:hover{background:var(–surface2)}
-.btn–danger{background:transparent;color:var(–red);border-color:rgba(239,68,68,.3)}
-.btn–danger:hover{background:rgba(239,68,68,.1)}
-.btn–sm{padding:8px 18px;font-size:.8rem}
-.btn–wide{width:100%;justify-content:center}
-.btn–accent{background:var(–accent);color:#1a0f00;border-color:var(–accent)}
-.btn–accent:hover{background:#d9a020;transform:translateY(-2px);box-shadow:0 8px 24px rgba(240,180,41,.3)}
-
-/* ===== SECTIONS ===== */
-.section{padding:100px 0}
-.section–alt{background:var(–bg-alt)}
-.section-label{font-size:.75rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(–green-4);margin-bottom:12px}
-.section-title{font-family:‘Playfair Display’,serif;font-size:clamp(1.8rem,4vw,2.8rem);color:var(–text);margin-bottom:16px;line-height:1.2}
-.section-desc{color:var(–text-2);max-width:540px;margin-bottom:48px}
-
-/* ===== REVEAL ===== */
-.reveal{opacity:0;transform:translateY(32px);transition:opacity .7s ease,transform .7s ease}
-.reveal.visible{opacity:1;transform:translateY(0)}
-.delay-1{transition-delay:.15s}.delay-2{transition-delay:.3s}.delay-3{transition-delay:.45s}.delay-4{transition-delay:.6s}
-
-/* ===== ABOUT CARDS ===== */
-.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-top:48px}
-.about-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius-lg);padding:36px 28px;transition:var(–transition);position:relative;overflow:hidden}
-.about-card::before{content:’’;position:absolute;inset:0;background:linear-gradient(135deg,var(–green-6)20%,transparent 60%);opacity:0;transition:var(–transition)}
-[data-theme=“dark”] .about-card::before{background:linear-gradient(135deg,rgba(74,222,128,.08) 20%,transparent 60%)}
-.about-card:hover{transform:translateY(-6px);box-shadow:var(–shadow);border-color:var(–green-4)}
-.about-card:hover::before{opacity:1}
-.about-card__icon{font-size:2.4rem;margin-bottom:16px;display:block}
-.about-card h3{font-family:‘Playfair Display’,serif;font-size:1.25rem;margin-bottom:10px;color:var(–text)}
-
-/* ===== STEPS ===== */
-.steps{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:start;gap:16px;margin-top:48px}
-.step{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius-lg);padding:28px 20px;text-align:center;transition:var(–transition)}
-.step:hover{border-color:var(–green-4);transform:translateY(-4px);box-shadow:var(–shadow)}
-.step__number{font-family:‘Playfair Display’,serif;font-size:2rem;color:var(–green-4);font-weight:700;opacity:.4;line-height:1;margin-bottom:4px}
-.step__icon{font-size:2rem;margin-bottom:12px;display:block}
-.step__title{font-weight:600;margin-bottom:8px;color:var(–text)}
-.step__text{font-size:.85rem;color:var(–text-2)}
-.step-arrow{font-size:1.5rem;color:var(–border);align-self:center;margin-top:-20px}
-
-/* ===== SPECIES PICKER ===== */
-.species-section{margin-top:48px}
-.species-label{font-weight:600;color:var(–text-2);margin-bottom:16px;font-size:.9rem;text-transform:uppercase;letter-spacing:.06em}
-.species-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
-.species-btn{background:var(–surface);border:2px solid var(–border);border-radius:var(–radius);padding:16px 12px;text-align:center;transition:var(–transition);cursor:pointer}
-.species-btn:hover,.species-btn.active{border-color:var(–green-4);background:var(–surface2);transform:translateY(-2px);box-shadow:var(–shadow)}
-.species-btn.active{background:linear-gradient(135deg,var(–green-6),var(–surface2))}
-[data-theme=“dark”] .species-btn.active{background:rgba(74,222,128,.1)}
-.species-btn__icon{font-size:2rem;display:block;margin-bottom:6px}
-.species-btn__name{font-size:.8rem;font-weight:600;color:var(–text);display:block}
-.species-btn__latin{font-size:.7rem;color:var(–text-muted);font-style:italic}
-
-/* ===== UPLOAD ===== */
-.upload-zone{border:2px dashed var(–border);border-radius:var(–radius-lg);padding:64px 32px;text-align:center;transition:var(–transition);cursor:pointer;margin-top:32px}
-.upload-zone:hover,.upload-zone.drag{border-color:var(–green-4);background:var(–surface2)}
-.upload-zone__icon{font-size:3rem;margin-bottom:16px}
-.upload-zone__title{font-weight:600;font-size:1.1rem;color:var(–text);margin-bottom:8px}
-.upload-zone__sub{color:var(–text-3);font-size:.875rem;margin-bottom:24px}
-.preview-box{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius-lg);padding:24px;margin-top:24px}
-.preview-box__img-wrap{border-radius:var(–radius);overflow:hidden;margin-bottom:20px;max-height:400px;display:flex;align-items:center;justify-content:center;background:var(–bg)}
-.preview-box__img{max-height:380px;object-fit:contain}
-.preview-box__actions{display:flex;gap:12px;justify-content:center}
-.hidden{display:none!important}
-
-/* ===== ANALYSIS PROGRESS ===== */
-.analysis-progress{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius-lg);padding:40px 32px;margin-top:24px;text-align:center}
-.analysis-anim{margin-bottom:32px}
-.leaf-spinner{font-size:3rem;display:inline-block;animation:spinLeaf 1.2s linear infinite}
-@keyframes spinLeaf{to{transform:rotate(360deg)}}
-.analysis-anim__text{color:var(–text-2);margin-top:12px;font-size:.95rem}
-.progress-steps{display:flex;flex-direction:column;gap:12px;text-align:left;max-width:320px;margin:0 auto}
-.progress-step{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:99px;transition:var(–transition);color:var(–text-muted);font-size:.875rem}
-.progress-step.active{background:var(–green-6);color:var(–green-1)}
-.progress-step.done{color:var(–green-4)}
-[data-theme=“dark”] .progress-step.active{background:rgba(74,222,128,.15);color:var(–green-5)}
-.ps-dot{width:10px;height:10px;border-radius:50%;background:currentColor;flex-shrink:0}
-.progress-step.done .ps-dot::before{content:‘✓’;font-size:.7rem}
-
-/* ===== RESULTS ===== */
-.result-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius-lg);padding:32px;margin-top:24px}
-.result-tabs{display:flex;gap:8px;margin-bottom:24px}
-.result-tab{padding:8px 20px;border-radius:99px;border:2px solid var(–border);font-size:.85rem;font-weight:600;color:var(–text-2);transition:var(–transition);cursor:pointer;background:transparent}
-.result-tab.active{border-color:var(–green-4);background:var(–green-4);color:#fff}
-.result-panel{display:none}.result-panel.active{display:block}
-.result-card__score{font-family:‘Playfair Display’,serif;font-size:clamp(1.4rem,3vw,2rem);margin-bottom:24px;color:var(–text);text-align:center;padding:20px;border-radius:var(–radius);background:var(–surface2);border:1px solid var(–border)}
-.result-dual{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
-.result-index-card{background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius);padding:20px;text-align:center}
-.result-index-card__label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(–text-3);margin-bottom:8px}
-.result-index-card__value{font-family:‘Playfair Display’,serif;font-size:2.5rem;font-weight:700;margin-bottom:4px}
-.result-index-card__desc{font-size:.8rem;color:var(–text-2)}
-.fa-color{color:var(–green-4)}.chl-color{color:var(–accent)}
-.stress-bar-wrap{margin-bottom:24px}
-.stress-label{font-size:.85rem;font-weight:600;color:var(–text-2);margin-bottom:8px;display:flex;justify-content:space-between}
-.stress-bar{height:10px;background:var(–border);border-radius:99px;overflow:hidden}
-.stress-fill{height:100%;border-radius:99px;transition:width 1.2s cubic-bezier(.4,0,.2,1);background:linear-gradient(90deg,#22c55e,#eab308,#ef4444)}
-.table-wrap{overflow-x:auto;margin-bottom:24px}
-.params-table{width:100%;border-collapse:collapse;font-size:.85rem}
-.params-table th{background:var(–bg);padding:10px 14px;text-align:left;font-weight:600;color:var(–text-2);border-bottom:2px solid var(–border)}
-.params-table td{padding:10px 14px;border-bottom:1px solid var(–border);color:var(–text)}
-.params-table tr:hover td{background:var(–surface2)}
-.result-card__map-section{text-align:center;padding-top:20px;border-top:1px solid var(–border)}
-.result-card__map-section p{color:var(–text-2);font-size:.9rem;margin-bottom:16px}
-
-/* ===== CHLOROPHYLL VISUAL ===== */
-.chl-visual{margin:16px 0;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.chl-swatch{width:60px;height:60px;border-radius:50%;border:3px solid var(–border);flex-shrink:0;transition:background 1s}
-.chl-gradient-bar{flex:1;height:16px;border-radius:99px;background:linear-gradient(90deg,#b5e48c,#52b788,#1b4332);position:relative;min-width:120px}
-.chl-marker{position:absolute;top:-4px;width:24px;height:24px;background:#fff;border:3px solid var(–green-4);border-radius:50%;transform:translateX(-50%);transition:left 1s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(34,197,94,.3)}
-
-/* ===== MAP ===== */
-.map-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
-.map-layer-toggles{display:flex;gap:8px}
-.layer-toggle{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:99px;border:2px solid var(–border);font-size:.85rem;font-weight:600;cursor:pointer;transition:var(–transition);background:var(–surface);color:var(–text-2)}
-.layer-toggle.active{border-color:var(–green-4);background:var(–surface2);color:var(–text)}
-.layer-toggle–chl.active{border-color:var(–accent);background:rgba(240,180,41,.08)}
-.layer-toggle__dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
-.map-wrap{position:relative}
-#mapContainer{height:520px;border-radius:var(–radius-lg);overflow:hidden;border:1px solid var(–border);box-shadow:var(–shadow)}
-.map-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px;padding:16px;background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);font-size:.8rem}
-.legend-section{display:flex;flex-direction:column;gap:6px}
-.legend-title{font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(–text-3);margin-bottom:4px}
-.legend-item{display:flex;align-items:center;gap:8px;color:var(–text-2)}
-.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
-.map-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-.map-popup-info{background:var(–surface);border-radius:8px;font-size:.8rem;min-width:180px}
-.map-popup-info h4{font-weight:700;margin-bottom:6px;color:var(–text)}
-.map-popup-info p{color:var(–text-2);margin-bottom:2px}
-
-/* ===== COMPARISON SECTION ===== */
-.comparison-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-top:40px}
-.comparison-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:24px;transition:var(–transition)}
-.comparison-card:hover{border-color:var(–green-4);transform:translateY(-3px);box-shadow:var(–shadow)}
-.comparison-card__icon{font-size:2rem;margin-bottom:12px}
-.comparison-card__species{font-weight:700;margin-bottom:4px}
-.comparison-card__bar-wrap{margin:12px 0}
-.comparison-card__bar{height:8px;background:var(–border);border-radius:99px;overflow:hidden;margin:4px 0}
-.comparison-card__fill{height:100%;border-radius:99px}
-.fill-fa{background:var(–green-4)}
-.fill-chl{background:var(–accent)}
-.comparison-card__labels{display:flex;justify-content:space-between;font-size:.7rem;color:var(–text-muted)}
-
-/* ===== RECOMMENDATIONS ===== */
-.reco-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:40px}
-.reco-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius-lg);padding:28px;position:relative;overflow:hidden;transition:var(–transition)}
-.reco-card:hover{transform:translateY(-4px);box-shadow:var(–shadow)}
-.reco-card__stripe{position:absolute;top:0;left:0;width:4px;bottom:0;border-radius:4px 0 0 4px}
-.reco-card__icon{font-size:1.8rem;margin-bottom:12px}
-.reco-card h3{font-weight:700;margin-bottom:8px;color:var(–text)}
-.reco-card p{font-size:.875rem;color:var(–text-2);line-height:1.6}
-
-/* ===== METHODOLOGY ===== */
-.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;margin-top:48px}
-.method-text p{color:var(–text-2);margin-bottom:20px;line-height:1.7}
-.method-text h3{font-family:‘Playfair Display’,serif;font-size:1.2rem;margin-bottom:12px;color:var(–text)}
-.method-list{padding-left:20px;color:var(–text-2);display:flex;flex-direction:column;gap:10px;font-size:.9rem}
-.method-list li{line-height:1.6}
-.scale-rows{display:flex;flex-direction:column;gap:10px}
-.scale-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(–radius);background:var(–surface);border:1px solid var(–border);transition:var(–transition)}
-.scale-row:hover{transform:translateX(4px)}
-.scale-badge{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;flex-shrink:0}
-.scale-row–1 .scale-badge{background:#22c55e}.scale-row–2 .scale-badge{background:#84cc16}.scale-row–3 .scale-badge{background:#eab308}.scale-row–4 .scale-badge{background:#f97316}.scale-row–5 .scale-badge{background:#ef4444}
-.scale-desc{flex:1;font-size:.875rem;color:var(–text-2)}
-.scale-val{font-size:.8rem;font-weight:600;color:var(–text-3);white-space:nowrap}
-
-/* ===== FORMULA BOX ===== */
-.formula-box{background:var(–bg);border:1px solid var(–border);border-radius:var(–radius);padding:20px;margin:16px 0;font-family:monospace;font-size:.9rem;color:var(–green-3)}
-[data-theme=“dark”] .formula-box{color:var(–green-5)}
-
-/* ===== FOOTER ===== */
-.site-footer{background:var(–footer-bg);color:#6b8f78;padding-top:0}
-.footer-wave{line-height:0}.footer-wave svg{width:100%;display:block}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;padding:64px 0 40px}
-.footer-brand .logo{color:#aed9b8;margin-bottom:16px}
-.footer-brand p{font-size:.875rem;line-height:1.7;color:#4a7a5e}
-.footer-col h4{font-weight:700;color:#aed9b8;margin-bottom:16px;font-size:.875rem;text-transform:uppercase;letter-spacing:.08em}
-.footer-col p,.footer-col a{font-size:.875rem;color:#4a7a5e;margin-bottom:8px;display:block;transition:color .2s}
-.footer-col a:hover{color:#aed9b8}
-.footer-bottom{border-top:1px solid #1a3028;padding:24px 0;text-align:center;font-size:.8rem;color:#2a5a3c}
-
-/* ===== PAGE TRANSITIONS ===== */
-.page-enter{animation:pageEnter .5s cubic-bezier(.4,0,.2,1) both}
-@keyframes pageEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-
-/* ===== TABS (plant nav) ===== */
-.section-tabs{display:flex;gap:8px;margin-bottom:32px;flex-wrap:wrap}
-.section-tab{padding:8px 20px;border-radius:99px;border:2px solid var(–border);background:transparent;font-size:.85rem;font-weight:600;color:var(–text-2);cursor:pointer;transition:var(–transition)}
-.section-tab.active{border-color:var(–green-4);background:var(–green-4);color:#fff}
-
-/* ===== NOTIFICATION TOAST ===== */
-.toast{position:fixed;bottom:32px;right:32px;background:var(–green-1);color:#fff;padding:14px 24px;border-radius:var(–radius);font-size:.875rem;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:9999;transform:translateX(120%);transition:transform .4s cubic-bezier(.4,0,.2,1)}
-.toast.show{transform:translateX(0)}
-[data-theme=“dark”] .toast{background:var(–green-4);color:var(–green-1)}
-
-/* ===== MOBILE ===== */
-@media(max-width:900px){
-.hero-3d-scene{display:none}
-.steps{grid-template-columns:1fr;}.step-arrow{display:none}
-.method-grid{grid-template-columns:1fr}
-.footer-grid{grid-template-columns:1fr}
-.result-dual{grid-template-columns:1fr}
-.main-nav{display:none;position:fixed;inset:0;top:var(–header-h);background:var(–surface);flex-direction:column;align-items:flex-start;padding:32px 24px;gap:4px;z-index:100}
-.main-nav.open{display:flex}
-.burger{display:flex}
-.hero-stats{gap:20px}
-}
-@media(max-width:600px){
-.hero-stats{flex-wrap:wrap;justify-content:center}
-.comparison-grid{grid-template-columns:1fr 1fr}
-.reco-grid{grid-template-columns:1fr}
-}
-</style>
-
 </head>
 <body>
 
 <!-- ===== HEADER ===== -->
-
 <header class="site-header" id="site-header">
   <div class="header-inner">
     <a href="#" class="logo">
       <span class="logo-leaf">🌿</span>
       <span class="logo-text">ЭкоАнализ</span>
     </a>
+
     <nav class="main-nav" id="main-nav">
       <a href="#about" class="nav-link">О проекте</a>
       <a href="#instructions" class="nav-link">Инструкция</a>
       <a href="#analysis" class="nav-link">Анализ</a>
       <a href="#map" class="nav-link">Карта</a>
-      <a href="#comparison" class="nav-link">Сравнение</a>
       <a href="#methodology" class="nav-link">Методология</a>
       <div class="nav-theme-wrap">
         <label class="theme-toggle" title="Тёмная тема">
           <input type="checkbox" id="themeToggle">
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+          </span>
           <span class="toggle-icons"><span>☀️</span><span>🌙</span></span>
         </label>
       </div>
     </nav>
-    <div style="display:flex;align-items:center;gap:12px">
-      <label class="theme-toggle" title="Тёмная тема" style="display:none" id="mobileTheme">
+
+    <div class="header-right-mobile">
+      <label class="theme-toggle theme-toggle--mobile" title="Тёмная тема">
         <input type="checkbox" id="themeToggleMobile">
         <span class="toggle-track"><span class="toggle-thumb"></span></span>
       </label>
@@ -357,57 +50,28 @@ input:checked~.toggle-track .toggle-thumb,
 </header>
 
 <!-- ===== HERO ===== -->
-
-<section class="hero" id="hero">
+<section class="hero">
   <div class="hero-orb hero-orb--1"></div>
   <div class="hero-orb hero-orb--2"></div>
   <div class="hero-orb hero-orb--3"></div>
-
-  <!-- Floating particles canvas -->
-
-<canvas id="heroCanvas" class="hero-particles"></canvas>
-
-  <!-- 3D Leaf -->
-
-  <div class="hero-3d-scene">
-    <div class="leaf-3d" id="leaf3d">🍃</div>
-    <div class="leaf-3d-glow"></div>
+  <div class="hero-leaves">
+    <span class="leaf-float l1">🍃</span>
+    <span class="leaf-float l2">🌿</span>
+    <span class="leaf-float l3">🍂</span>
+    <span class="leaf-float l4">🌱</span>
+    <span class="leaf-float l5">✨</span>
   </div>
-
   <div class="container">
     <div class="hero-content">
-      <span class="hero-eyebrow">🌱 Гимназия №25 г. Минска</span>
+      <span class="hero-eyebrow">Гимназия №25 г. Минска</span>
       <h1 class="hero-title">Оценка качества<br><em>окружающей среды</em></h1>
-      <p class="hero-sub">
-        Два научных индекса — флуктуирующая асимметрия и хлорофилльный анализ —
-        на интерактивной карте города в реальном времени
-      </p>
+      <p class="hero-sub">Метод флуктуирующей асимметрии листьев<br>растений семейства Ивовые</p>
       <div class="hero-actions">
-        <a href="#analysis" class="btn btn--primary">🔬 Начать анализ</a>
+        <a href="#analysis" class="btn btn--primary">Начать анализ</a>
         <a href="#about" class="btn btn--ghost">Узнать больше</a>
-      </div>
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <div class="hero-stat__num" id="statPoints">0</div>
-          <div class="hero-stat__label">точек на карте</div>
-        </div>
-        <div class="hero-stat">
-          <div class="hero-stat__num">7</div>
-          <div class="hero-stat__label">видов растений</div>
-        </div>
-        <div class="hero-stat">
-          <div class="hero-stat__num">2</div>
-          <div class="hero-stat__label">индекса анализа</div>
-        </div>
       </div>
     </div>
   </div>
-
-  <div class="hero-scroll-indicator">
-    <div class="scroll-mouse"><div class="scroll-dot"></div></div>
-    <span style="font-size:.7rem;color:var(--text-3);letter-spacing:.06em">ПРОКРУТИТЕ</span>
-  </div>
-
   <div class="hero-wave">
     <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
       <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="var(--bg)"/>
@@ -416,7 +80,6 @@ input:checked~.toggle-track .toggle-thumb,
 </section>
 
 <!-- ===== ABOUT ===== -->
-
 <section id="about" class="section">
   <div class="container">
     <div class="section-label">О проекте</div>
@@ -424,25 +87,24 @@ input:checked~.toggle-track .toggle-thumb,
     <div class="about-grid">
       <div class="about-card reveal">
         <div class="about-card__icon">🔬</div>
-        <h3>Флуктуирующая асимметрия</h3>
-        <p>Небольшие случайные отклонения от идеальной симметрии листа. ФА отражает <strong>накопленный стресс</strong> растения за весь сезон — хроническое загрязнение.</p>
+        <h3>Метод</h3>
+        <p>Флуктуирующая асимметрия — небольшие случайные отклонения от идеальной симметрии листа. Чем выше асимметрия, тем хуже состояние среды.</p>
       </div>
       <div class="about-card reveal delay-1">
-        <div class="about-card__icon">🎨</div>
-        <h3>Хлорофилльный индекс</h3>
-        <p>Анализ цвета листа по каналам RGB. ХлИ показывает <strong>актуальное состояние</strong> прямо сейчас — острое, текущее загрязнение или стресс.</p>
+        <div class="about-card__icon">🌍</div>
+        <h3>Цель</h3>
+        <p>Создать интерактивную карту экологического состояния регионов на основе данных, собранных участниками проекта.</p>
       </div>
       <div class="about-card reveal delay-2">
-        <div class="about-card__icon">🗺️</div>
-        <h3>Двухслойная карта</h3>
-        <p>Слой ФА + слой хлорофилла дают <strong>полную картину</strong>: где загрязнение хроническое, а где произошёл острый выброс. Включайте и выключайте слои.</p>
+        <div class="about-card__icon">👥</div>
+        <h3>Участие</h3>
+        <p>Проект Киткевича Дениса, ученика 8 «Б» класса. Присоединяйтесь — ваш лист поможет нарисовать общую экологическую картину.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ===== INSTRUCTIONS ===== -->
-
 <section id="instructions" class="section section--alt">
   <div class="container">
     <div class="section-label">Инструкция</div>
@@ -452,311 +114,166 @@ input:checked~.toggle-track .toggle-thumb,
         <div class="step__number">01</div>
         <div class="step__icon">🌳</div>
         <h3 class="step__title">Найдите растение</h3>
-        <p class="step__text">Подходит любой вид из нашего списка — ива, тополь, берёза, дуб, клён и другие.</p>
+        <p class="step__text">Подходят <strong>Ива Белая</strong>, <strong>Ива Козья</strong> или <strong>Тополь Бальзамический</strong> — представители семейства Ивовые.</p>
       </div>
       <div class="step-arrow">→</div>
       <div class="step reveal delay-1">
         <div class="step__number">02</div>
         <div class="step__icon">📸</div>
-        <h3 class="step__title">Фото на белом фоне</h3>
-        <p class="step__text">Положите лист на белый лист бумаги, хорошо осветите. Белый фон нужен для калибровки хлорофилла.</p>
+        <h3 class="step__title">Сфотографируйте лист</h3>
+        <p class="step__text">На контрастном фоне, при хорошем освещении, чтобы лист был виден полностью.</p>
       </div>
       <div class="step-arrow">→</div>
       <div class="step reveal delay-2">
         <div class="step__number">03</div>
         <div class="step__icon">📊</div>
-        <h3 class="step__title">Двойной анализ</h3>
-        <p class="step__text">Алгоритм считает ФА (асимметрию) и ХлИ (цвет). Вместе они дают индекс стресса 0–100%.</p>
+        <h3 class="step__title">Загрузите и получите результат</h3>
+        <p class="step__text">Алгоритм определит параметры асимметрии и оценит качество среды в точке сбора.</p>
       </div>
       <div class="step-arrow">→</div>
       <div class="step reveal delay-3">
         <div class="step__number">04</div>
         <div class="step__icon">📍</div>
-        <h3 class="step__title">На карту!</h3>
-        <p class="step__text">Ваша метка появится на двухслойной карте — все видят, где чисто, а где тревожно.</p>
+        <h3 class="step__title">Добавьте на карту</h3>
+        <p class="step__text">Поделитесь результатом анонимно. Ваша метка появится у всех пользователей в реальном времени.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ===== ANALYSIS ===== -->
-
 <section id="analysis" class="section">
   <div class="container">
     <div class="section-label">Анализ</div>
     <h2 class="section-title">Анализ листа</h2>
 
-```
-<!-- Species picker -->
-<div class="species-section reveal">
-  <div class="species-label">Выберите вид растения (любой):</div>
-  <div class="species-grid" id="speciesGrid">
-    <button class="species-btn active" data-plant="salix-alba" data-params='{"w1":1.2,"w2":1.1,"j2":0.9,"d12":0.8,"d12e":0.7,"a12":0.85}'>
-      <span class="species-btn__icon">🌿</span>
-      <span class="species-btn__name">Ива Белая</span>
-      <span class="species-btn__latin">Salix alba</span>
-    </button>
-    <button class="species-btn" data-plant="salix-caprea" data-params='{"w1":1.3,"w2":1.0,"j2":1.1,"d12":0.9,"d12e":0.8,"a12":0.9}'>
-      <span class="species-btn__icon">🍃</span>
-      <span class="species-btn__name">Ива Козья</span>
-      <span class="species-btn__latin">Salix caprea</span>
-    </button>
-    <button class="species-btn" data-plant="populus" data-params='{"w1":1.15,"w2":1.05,"j2":0.85,"d12":0.75,"d12e":0.65,"a12":0.8}'>
-      <span class="species-btn__icon">🌲</span>
-      <span class="species-btn__name">Тополь</span>
-      <span class="species-btn__latin">Populus balsamifera</span>
-    </button>
-    <button class="species-btn" data-plant="betula" data-params='{"w1":1.1,"w2":1.0,"j2":0.8,"d12":0.7,"d12e":0.6,"a12":0.75}'>
-      <span class="species-btn__icon">🌳</span>
-      <span class="species-btn__name">Берёза</span>
-      <span class="species-btn__latin">Betula pendula</span>
-    </button>
-    <button class="species-btn" data-plant="quercus" data-params='{"w1":1.4,"w2":1.2,"j2":1.2,"d12":1.0,"d12e":0.9,"a12":1.0}'>
-      <span class="species-btn__icon">🍂</span>
-      <span class="species-btn__name">Дуб</span>
-      <span class="species-btn__latin">Quercus robur</span>
-    </button>
-    <button class="species-btn" data-plant="acer" data-params='{"w1":1.25,"w2":1.15,"j2":0.95,"d12":0.85,"d12e":0.75,"a12":0.88}'>
-      <span class="species-btn__icon">🍁</span>
-      <span class="species-btn__name">Клён</span>
-      <span class="species-btn__latin">Acer platanoides</span>
-    </button>
-    <button class="species-btn" data-plant="tilia" data-params='{"w1":1.18,"w2":1.08,"j2":0.88,"d12":0.78,"d12e":0.68,"a12":0.82}'>
-      <span class="species-btn__icon">🌺</span>
-      <span class="species-btn__name">Липа</span>
-      <span class="species-btn__latin">Tilia cordata</span>
-    </button>
-  </div>
-</div>
-
-<!-- Upload -->
-<div class="upload-zone reveal" id="uploadArea" style="margin-top:32px">
-  <div class="upload-zone__inner">
-    <div class="upload-zone__icon">📁</div>
-    <p class="upload-zone__title">Перетащите фотографию листа</p>
-    <p class="upload-zone__sub">Лучше на белом фоне — для точного анализа хлорофилла</p>
-    <button class="btn btn--primary" id="uploadBtn">Выбрать файл</button>
-    <input type="file" id="fileInput" accept="image/*" style="display:none">
-  </div>
-</div>
-
-<!-- Preview -->
-<div class="preview-box hidden" id="imagePreviewContainer">
-  <div class="preview-box__img-wrap">
-    <img id="imagePreview" class="preview-box__img" alt="Preview">
-  </div>
-  <div class="preview-box__actions">
-    <button class="btn btn--primary" id="analyzeBtn">🔬 Анализировать ФА + Хлорофилл</button>
-    <button class="btn btn--ghost" id="changeImgBtn">Изменить фото</button>
-  </div>
-</div>
-
-<!-- Analysis progress -->
-<div class="analysis-progress hidden" id="analysisVisualization">
-  <div class="analysis-anim">
-    <div class="leaf-spinner">🌿</div>
-    <p class="analysis-anim__text" id="analysisText">Анализируем лист…</p>
-  </div>
-  <div class="progress-steps">
-    <div class="progress-step" id="step1"><span class="ps-dot"></span><span class="ps-label">Сегментация листа</span></div>
-    <div class="progress-step" id="step2"><span class="ps-dot"></span><span class="ps-label">Ось симметрии и параметры ФА</span></div>
-    <div class="progress-step" id="step3"><span class="ps-dot"></span><span class="ps-label">Калибровка освещения</span></div>
-    <div class="progress-step" id="step4"><span class="ps-dot"></span><span class="ps-label">Расчёт хлорофилльного индекса</span></div>
-    <div class="progress-step" id="step5"><span class="ps-dot"></span><span class="ps-label">Итоговый индекс стресса</span></div>
-  </div>
-</div>
-
-<!-- Results -->
-<div class="result-card hidden" id="resultContainer">
-  <div class="result-tabs">
-    <button class="result-tab active" data-tab="summary">Итог</button>
-    <button class="result-tab" data-tab="fa">Асимметрия (ФА)</button>
-    <button class="result-tab" data-tab="chl">Хлорофилл (ХлИ)</button>
-  </div>
-
-  <!-- Summary -->
-  <div class="result-panel active" id="panel-summary">
-    <div class="result-card__score" id="qualityResult"></div>
-    <div class="result-dual">
-      <div class="result-index-card">
-        <div class="result-index-card__label">Индекс ФА</div>
-        <div class="result-index-card__value fa-color" id="faValue">—</div>
-        <div class="result-index-card__desc">Накопленный стресс (сезон)</div>
-      </div>
-      <div class="result-index-card">
-        <div class="result-index-card__label">Хлорофилльный индекс</div>
-        <div class="result-index-card__value chl-color" id="chlValue">—</div>
-        <div class="result-index-card__desc">Актуальное состояние</div>
+    <!-- Plant picker -->
+    <div class="plant-picker reveal">
+      <p class="plant-picker__label">Выберите вид растения:</p>
+      <div class="plant-options">
+        <button class="plant-btn" data-plant="salix-alba">
+          <span class="plant-btn__icon">🌳</span>
+          <span>Ива Белая</span>
+        </button>
+        <button class="plant-btn" data-plant="salix-caprea">
+          <span class="plant-btn__icon">🍃</span>
+          <span>Ива Козья</span>
+        </button>
+        <button class="plant-btn" data-plant="populus-balsamifera">
+          <span class="plant-btn__icon">🌲</span>
+          <span>Тополь Бальзамический</span>
+        </button>
       </div>
     </div>
-    <div class="stress-bar-wrap">
-      <div class="stress-label"><span>Общий индекс стресса</span><span id="stressPercent">0%</span></div>
-      <div class="stress-bar"><div class="stress-fill" id="stressFill" style="width:0%"></div></div>
-    </div>
-    <div class="result-card__map-section">
-      <p>Поделитесь результатом — ваша метка появится на карте у всех участников.</p>
-      <button class="btn btn--primary btn--wide" id="addToMapBtn">📍 Добавить на карту</button>
-    </div>
-  </div>
 
-  <!-- FA Panel -->
-  <div class="result-panel" id="panel-fa">
-    <h3 style="margin-bottom:16px;font-family:'Playfair Display',serif">Параметры флуктуирующей асимметрии</h3>
-    <div class="table-wrap">
-      <table class="params-table">
-        <thead>
-          <tr><th>Параметр</th><th>Лево</th><th>Право</th><th>Асимметрия</th></tr>
-        </thead>
-        <tbody id="parametersTable"></tbody>
-      </table>
-    </div>
-    <p style="font-size:.85rem;color:var(--text-3);margin-top:8px">ФА = среднее |Лево−Право| / (Лево+Право)</p>
-  </div>
-
-  <!-- Chlorophyll Panel -->
-  <div class="result-panel" id="panel-chl">
-    <h3 style="margin-bottom:16px;font-family:'Playfair Display',serif">Хлорофилльный анализ</h3>
-    <div class="chl-visual">
-      <div class="chl-swatch" id="chlSwatch"></div>
-      <div style="flex:1">
-        <div style="font-size:.85rem;color:var(--text-2);margin-bottom:8px">Цвет листа (нормализованный)</div>
-        <div class="chl-gradient-bar">
-          <div class="chl-marker" id="chlMarker" style="left:50%"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-muted);margin-top:4px">
-          <span>Бледный / нет хлорофилла</span><span>Насыщенный зелёный</span>
-        </div>
+    <!-- Upload -->
+    <div class="upload-zone reveal" id="uploadArea">
+      <div class="upload-zone__inner">
+        <div class="upload-zone__icon">📁</div>
+        <p class="upload-zone__title">Перетащите фотографию листа</p>
+        <p class="upload-zone__sub">или выберите файл</p>
+        <button class="btn btn--primary" id="uploadBtn">Выбрать файл</button>
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0" id="chlDetails"></div>
-    <div class="formula-box" id="chlFormula">
-      ХлИ = (G − R) / (G + R)<br>
-      Вариант NDVI-аналог для фотографии
-    </div>
-    <p style="font-size:.85rem;color:var(--text-2)">Значения: от −1 (нет зелёного) до +1 (максимально зелёный). Норма для здорового листа: 0.20–0.45</p>
-  </div>
-</div>
-```
 
+    <!-- Preview -->
+    <div class="preview-box hidden" id="imagePreviewContainer">
+      <div class="preview-box__img-wrap">
+        <img id="imagePreview" class="preview-box__img" alt="Preview">
+      </div>
+      <div class="preview-box__actions">
+        <button class="btn btn--primary" id="analyzeBtn">🔬 Проанализировать</button>
+        <button class="btn btn--ghost" id="changeImgBtn">Изменить фото</button>
+      </div>
+    </div>
+
+    <!-- Analysis steps -->
+    <div class="analysis-progress hidden" id="analysisVisualization">
+      <div class="analysis-anim">
+        <div class="leaf-spinner">🌿</div>
+        <p class="analysis-anim__text">Анализируем лист…</p>
+      </div>
+      <div class="progress-steps">
+        <div class="progress-step" id="step1"><span class="ps-dot"></span><span class="ps-label">Сегментация листа</span></div>
+        <div class="progress-step" id="step2"><span class="ps-dot"></span><span class="ps-label">Ось симметрии</span></div>
+        <div class="progress-step" id="step3"><span class="ps-dot"></span><span class="ps-label">Измерение параметров</span></div>
+        <div class="progress-step" id="step4"><span class="ps-dot"></span><span class="ps-label">Расчёт асимметрии</span></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="result-card hidden" id="resultContainer">
+      <div class="result-card__score" id="qualityResult"></div>
+      <h3 class="result-card__subtitle">Измеренные параметры</h3>
+      <div class="table-wrap">
+        <table class="params-table">
+          <thead>
+            <tr>
+              <th>Параметр</th>
+              <th>Лево</th>
+              <th>Право</th>
+              <th>Асимметрия</th>
+            </tr>
+          </thead>
+          <tbody id="parametersTable"></tbody>
+        </table>
+      </div>
+      <div class="result-card__map-section">
+        <p>Поделитесь результатом анонимно — ваша метка появится у всех участников на карте.</p>
+        <button class="btn btn--primary btn--wide" id="addToMapBtn">📍 Добавить на карту</button>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- ===== MAP ===== -->
-
 <section id="map" class="section section--alt">
   <div class="container">
     <div class="section-label">Карта</div>
     <h2 class="section-title">Карта качества среды</h2>
-    <p class="section-desc reveal">Два независимых слоя — хроническое и острое загрязнение. Включайте и выключайте слои, чтобы читать экологическую историю города.</p>
+    <p class="section-desc reveal">Анонимные результаты всех участников. Новые метки появляются автоматически — синхронизация каждые 30 секунд.</p>
 
-```
-<div class="map-controls reveal">
-  <div class="map-layer-toggles">
-    <button class="layer-toggle active" id="toggleFA">
-      <span class="layer-toggle__dot" style="background:#22c55e"></span>
-      Слой ФА (хроническое)
-    </button>
-    <button class="layer-toggle layer-toggle--chl active" id="toggleCHL">
-      <span class="layer-toggle__dot" style="background:#f0b429"></span>
-      Слой хлорофилла (острое)
-    </button>
-  </div>
-  <button class="btn btn--ghost btn--sm" id="loadServerDataBtn">🔄 Обновить</button>
-  <button class="btn btn--ghost btn--sm" id="exportDataBtn">⬇ Экспорт</button>
-  <button class="btn btn--ghost btn--sm" id="importDataBtn">⬆ Импорт</button>
-  <button class="btn--danger btn btn--sm" id="clearMapBtn">🗑 Очистить</button>
-</div>
-
-<div class="map-wrap reveal">
-  <div id="mapContainer"></div>
-  <div class="map-legend">
-    <div class="legend-section">
-      <div class="legend-title">🟢 Слой ФА — асимметрия</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>I — Условная норма (&lt;0.040)</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#84cc16"></span>II — Начальные отклонения</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#eab308"></span>III — Средний уровень</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#f97316"></span>IV — Существенные</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>V — Критические (&gt;0.054)</div>
-    </div>
-    <div class="legend-section" style="margin-left:24px">
-      <div class="legend-title">🟡 Слой ХлИ — хлорофилл</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#4ade80;border:2px dashed #16a34a"></span>Высокий (норма)</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#fde047;border:2px dashed #ca8a04"></span>Средний (внимание)</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#fb923c;border:2px dashed #c2410c"></span>Низкий (стресс)</div>
-    </div>
-  </div>
-</div>
-<input type="file" id="importFileInput" accept=".json" style="display:none">
-```
-
-  </div>
-</section>
-
-<!-- ===== COMPARISON ===== -->
-
-<section id="comparison" class="section">
-  <div class="container">
-    <div class="section-label">Сравнение</div>
-    <h2 class="section-title">Устойчивость видов</h2>
-    <p class="section-desc">Разные виды по-разному реагируют на загрязнение. Данные собраны по результатам анализов участников.</p>
-    <div class="comparison-grid" id="comparisonGrid">
-      <!-- Filled by JS -->
-    </div>
-    <div style="margin-top:48px">
-      <div class="section-label">Рекомендации по озеленению</div>
-      <div class="reco-grid">
-        <div class="reco-card reveal">
-          <div class="reco-card__stripe" style="background:#22c55e"></div>
-          <div class="reco-card__icon">🌳</div>
-          <h3>Зоны с ФА &lt; 0.040</h3>
-          <p>Экологически благополучные зоны. Рекомендуется сохранять существующий зелёный пояс, высаживать листопадные деревья с высокой декоративностью.</p>
-        </div>
-        <div class="reco-card reveal delay-1">
-          <div class="reco-card__stripe" style="background:#eab308"></div>
-          <div class="reco-card__icon">🌿</div>
-          <h3>Зоны со средним ФА</h3>
-          <p>Приоритет — виды с высокой газоустойчивостью: тополь бальзамический, клён ясенелистный. Увеличить плотность посадок вдоль дорог.</p>
-        </div>
-        <div class="reco-card reveal delay-2">
-          <div class="reco-card__stripe" style="background:#ef4444"></div>
-          <div class="reco-card__icon">🚨</div>
-          <h3>Зоны с ФА &gt; 0.050</h3>
-          <p>Требуется срочная замена или дополнение зелёных насаждений. Использовать устойчивые к загрязнению виды — берёза, липа. Ограничить движение транспорта.</p>
-        </div>
+    <div class="map-wrap reveal">
+      <div id="mapContainer"></div>
+      <div class="map-legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>I — Норма</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#84cc16"></span>II — Начальные</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#eab308"></span>III — Средние</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f97316"></span>IV — Существенные</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>V — Критические</div>
       </div>
     </div>
+
+    <div class="map-actions">
+      <button class="btn btn--ghost btn--sm" id="loadServerDataBtn">🔄 Обновить</button>
+      <button class="btn btn--ghost btn--sm" id="exportDataBtn">⬇ Экспорт</button>
+      <button class="btn btn--ghost btn--sm" id="importDataBtn">⬆ Импорт</button>
+      <button class="btn btn--danger btn--sm" id="clearMapBtn">🗑 Очистить</button>
+    </div>
+    <input type="file" id="importFileInput" accept=".json" style="display:none">
   </div>
 </section>
 
 <!-- ===== METHODOLOGY ===== -->
-
-<section id="methodology" class="section section--alt">
+<section id="methodology" class="section">
   <div class="container">
     <div class="section-label">Методология</div>
     <h2 class="section-title">Научная основа</h2>
     <div class="method-grid">
       <div class="method-text reveal">
-        <p>Метод флуктуирующей асимметрии разработан <strong>В.М. Захаровым</strong> и основан на измерении небольших случайных отклонений от билатеральной симметрии.</p>
-        <h3>Параметры ФА (5 штук)</h3>
+        <p>Метод флуктуирующей асимметрии разработан <strong>В.М. Захаровым</strong> и основан на измерении небольших случайных отклонений от билатеральной симметрии у организмов.</p>
+        <h3>Измеряемые параметры</h3>
         <ol class="method-list">
           <li>Ширина левой и правой половинок листа</li>
           <li>Длина второй жилки второго порядка</li>
-          <li>Расстояние между основаниями 1-й и 2-й жилок</li>
-          <li>Расстояние между концами 1-й и 2-й жилок</li>
-          <li>Угол между главной и 2-й жилкой второго порядка</li>
+          <li>Расстояние между основаниями 1-й и 2-й жилок второго порядка</li>
+          <li>Расстояние между концами 1-й и 2-й жилок второго порядка</li>
+          <li>Угол между главной жилкой и 2-й жилкой второго порядка</li>
         </ol>
-        <h3 style="margin-top:24px">Хлорофилльный индекс</h3>
-        <div class="formula-box">
-          Вариант А: G / (R + G + B)<br>
-          Вариант Б (используется): (G − R) / (G + R)<br>
-          Нормализованный NDVI-аналог для RGB-фото
-        </div>
-        <div class="formula-box" style="margin-top:8px">
-          Индекс стресса = (ФА_норм + (1 − ХлИ_норм)) / 2
-        </div>
       </div>
       <div class="method-scale reveal delay-1">
-        <h3>Оценочная шкала (ФА)</h3>
+        <h3>Оценочная шкала</h3>
         <div class="scale-rows">
           <div class="scale-row scale-row--1"><span class="scale-badge">I</span><span class="scale-desc">Условно нормальное</span><span class="scale-val">&lt; 0.040</span></div>
           <div class="scale-row scale-row--2"><span class="scale-badge">II</span><span class="scale-desc">Начальные отклонения</span><span class="scale-val">0.040–0.044</span></div>
@@ -764,30 +281,12 @@ input:checked~.toggle-track .toggle-thumb,
           <div class="scale-row scale-row--4"><span class="scale-badge">IV</span><span class="scale-desc">Существенные отклонения</span><span class="scale-val">0.050–0.054</span></div>
           <div class="scale-row scale-row--5"><span class="scale-badge">V</span><span class="scale-desc">Критическое состояние</span><span class="scale-val">&gt; 0.054</span></div>
         </div>
-        <div style="margin-top:24px">
-          <h3>Интерпретация двух слоёв</h3>
-          <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
-            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-size:.875rem">
-              <strong style="color:var(--green-4)">ФА высокий, ХлИ в норме</strong><br>
-              <span style="color:var(--text-2)">Хроническое загрязнение (напр., старый завод), но сейчас выбросов нет.</span>
-            </div>
-            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-size:.875rem">
-              <strong style="color:var(--accent)">ФА низкий, ХлИ упал</strong><br>
-              <span style="color:var(--text-2)">Острый стресс — например, вчерашний выброс выхлопов.</span>
-            </div>
-            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-size:.875rem">
-              <strong style="color:var(--red)">Оба высокие</strong><br>
-              <span style="color:var(--text-2)">Критическая зона — и хроническое, и острое загрязнение.</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ===== FOOTER ===== -->
-
 <footer class="site-footer">
   <div class="footer-wave">
     <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
@@ -797,13 +296,13 @@ input:checked~.toggle-track .toggle-thumb,
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <div class="logo" style="color:#aed9b8;margin-bottom:16px"><span class="logo-leaf">🌿</span><span class="logo-text">ЭкоАнализ</span></div>
-        <p>Оценка качества окружающей среды методом флуктуирующей асимметрии и хлорофилльного анализа листьев растений.</p>
+        <div class="logo"><span class="logo-leaf">🌿</span><span class="logo-text">ЭкоАнализ</span></div>
+        <p>Оценка качества окружающей среды методом флуктуирующей асимметрии листьев растений семейства Ивовые.</p>
       </div>
       <div class="footer-col">
         <h4>Контакты</h4>
         <p>ГУО «Гимназия №25 имени Риммы Шершнёвой г. Минска»</p>
-        <p>Научный руководитель:<br><strong style="color:#aed9b8">Корнеенко Ольга Сергеевна</strong></p>
+        <p>Научный руководитель:<br><strong>Корнеенко Ольга Сергеевна</strong></p>
       </div>
       <div class="footer-col">
         <h4>Навигация</h4>
@@ -811,546 +310,17 @@ input:checked~.toggle-track .toggle-thumb,
         <a href="#instructions">Инструкция</a>
         <a href="#analysis">Анализ</a>
         <a href="#map">Карта</a>
-        <a href="#comparison">Сравнение видов</a>
         <a href="#methodology">Методология</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2025 Проект «Оценка качества среды методом флуктуирующей асимметрии» · Проект Киткевича Дениса, 8 «Б»</p>
+      <p>© 2025 Проект «Оценка качества среды методом флуктуирующей асимметрии»</p>
     </div>
   </div>
 </footer>
 
 <canvas id="analysisCanvas" style="display:none"></canvas>
-
-<div class="toast" id="toast"></div>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script>
-// ===== THEME =====
-const root = document.documentElement;
-function setTheme(dark){
-  root.setAttribute('data-theme', dark ? 'dark' : '');
-  document.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = dark);
-}
-const savedTheme = localStorage.getItem('theme');
-if(savedTheme === 'dark') setTheme(true);
-document.querySelectorAll('input[type=checkbox]').forEach(cb => {
-  cb.addEventListener('change', () => {
-    const dark = cb.checked;
-    setTheme(dark);
-    localStorage.setItem('theme', dark ? 'dark' : 'light');
-  });
-});
-
-// ===== BURGER =====
-document.getElementById('burger').addEventListener('click', () => {
-  document.getElementById('main-nav').classList.toggle('open');
-});
-
-// ===== HERO CANVAS PARTICLES =====
-const canvas = document.getElementById('heroCanvas');
-const ctx = canvas.getContext('2d');
-let particles = [];
-function resizeCanvas(){
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
-}
-function initParticles(){
-  particles = [];
-  for(let i=0;i<60;i++){
-    particles.push({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height,
-      r: Math.random()*3+1,
-      vx: (Math.random()-.5)*.4,
-      vy: (Math.random()-.5)*.4,
-      a: Math.random()*.5+.2,
-      color: Math.random()>.5 ? '#22c55e' : '#4ade80'
-    });
-  }
-}
-function drawParticles(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  particles.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle = p.color;
-    ctx.globalAlpha = p.a;
-    ctx.fill();
-    p.x += p.vx; p.y += p.vy;
-    if(p.x<0||p.x>canvas.width) p.vx*=-1;
-    if(p.y<0||p.y>canvas.height) p.vy*=-1;
-  });
-  ctx.globalAlpha=1;
-  requestAnimationFrame(drawParticles);
-}
-window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
-resizeCanvas(); initParticles(); drawParticles();
-
-// ===== 3D LEAF MOUSE PARALLAX =====
-const leaf3d = document.getElementById('leaf3d');
-document.addEventListener('mousemove', e => {
-  if(!leaf3d) return;
-  const cx = window.innerWidth/2, cy = window.innerHeight/2;
-  const rx = (e.clientY-cy)/cy * 12;
-  const ry = (e.clientX-cx)/cx * -12;
-  leaf3d.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-});
-
-// ===== REVEAL OBSERVER =====
-const revealObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
-}, { threshold: .12 });
-document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
-
-// ===== COUNTER ANIMATION =====
-function animateCounter(el, target, duration=1500){
-  let start=0, startTime=null;
-  function step(ts){
-    if(!startTime) startTime=ts;
-    const progress = Math.min((ts-startTime)/duration,1);
-    el.textContent = Math.floor(progress*target);
-    if(progress<1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-
-// ===== SPECIES PICKER =====
-let selectedPlant = 'salix-alba';
-let selectedParams = JSON.parse(document.querySelector('.species-btn.active').dataset.params);
-document.querySelectorAll('.species-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.species-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedPlant = btn.dataset.plant;
-    selectedParams = JSON.parse(btn.dataset.params);
-  });
-});
-
-// ===== UPLOAD =====
-const uploadArea = document.getElementById('uploadArea');
-const fileInput = document.getElementById('fileInput');
-const previewContainer = document.getElementById('imagePreviewContainer');
-const imagePreview = document.getElementById('imagePreview');
-
-uploadArea.addEventListener('click', () => fileInput.click());
-uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag'); });
-uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag'));
-uploadArea.addEventListener('drop', e => {
-  e.preventDefault(); uploadArea.classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if(file) loadFile(file);
-});
-document.getElementById('uploadBtn').addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
-fileInput.addEventListener('change', () => { if(fileInput.files[0]) loadFile(fileInput.files[0]); });
-document.getElementById('changeImgBtn').addEventListener('click', () => {
-  previewContainer.classList.add('hidden');
-  uploadArea.classList.remove('hidden');
-  fileInput.value='';
-});
-
-let currentImageData = null;
-function loadFile(file){
-  const reader = new FileReader();
-  reader.onload = e => {
-    imagePreview.src = e.target.result;
-    currentImageData = e.target.result;
-    uploadArea.classList.add('hidden');
-    previewContainer.classList.remove('hidden');
-  };
-  reader.readAsDataURL(file);
-}
-
-// ===== ANALYSIS =====
-let lastResults = null;
-document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
-
-async function runAnalysis(){
-  previewContainer.classList.add('hidden');
-  document.getElementById('resultContainer').classList.add('hidden');
-  const vis = document.getElementById('analysisVisualization');
-  vis.classList.remove('hidden');
-
-  const steps = ['step1','step2','step3','step4','step5'];
-  const texts = ['Сегментируем лист...','Вычисляем параметры асимметрии...','Калибруем освещение...','Считаем хлорофилльный индекс...','Формируем итоговый отчёт...'];
-  for(let i=0;i<steps.length;i++){
-    document.getElementById('analysisText').textContent = texts[i];
-    document.getElementById(steps[i]).classList.add('active');
-    await delay(600 + Math.random()*300);
-    document.getElementById(steps[i]).classList.remove('active');
-    document.getElementById(steps[i]).classList.add('done');
-  }
-
-  // Compute from image
-  const results = await computeIndices();
-  lastResults = results;
-
-  // Reset steps
-  steps.forEach(s => {
-    document.getElementById(s).classList.remove('active','done');
-  });
-
-  vis.classList.add('hidden');
-  showResults(results);
-}
-
-function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
-async function computeIndices(){
-  // ===== FA COMPUTATION =====
-  const p = selectedParams;
-  const mult = 1 + (Math.random()-.5)*.1;
-  const faParams = [
-    { name:'Ширина листа', l: p.w1*mult + Math.random()*.05, r: p.w1*mult*(1+asymRandom()) },
-    { name:'2-я жилка', l: p.j2*mult + Math.random()*.03, r: p.j2*mult*(1+asymRandom()) },
-    { name:'Расст. основ. жилок', l: p.d12*mult + Math.random()*.02, r: p.d12*mult*(1+asymRandom()) },
-    { name:'Расст. концов жилок', l: p.d12e*mult + Math.random()*.02, r: p.d12e*mult*(1+asymRandom()) },
-    { name:'Угол главной жилки (°)', l: (p.a12*mult*45 + Math.random()*2), r: (p.a12*mult*45*(1+asymRandom())) }
-  ];
-  const faArr = faParams.map(p => Math.abs(p.l-p.r)/(p.l+p.r));
-  const fa = faArr.reduce((a,b)=>a+b,0)/faArr.length;
-
-  // ===== CHL COMPUTATION =====
-  let R=0,G=0,B=0;
-  if(currentImageData){
-    const result = await extractLeafColor(currentImageData);
-    R=result.R; G=result.G; B=result.B;
-  } else {
-    R=80+Math.random()*60; G=130+Math.random()*80; B=70+Math.random()*50;
-  }
-  const chlNDVI = (G-R)/(G+R+0.001);
-  const chlSimple = G/(R+G+B+0.001);
-
-  // ===== STRESS =====
-  const FA_MAX=0.08, FA_MIN=0.020;
-  const faNorm = Math.max(0,Math.min(1,(fa-FA_MIN)/(FA_MAX-FA_MIN)));
-  const CHL_MAX=0.5, CHL_MIN=0.05;
-  const chlNorm = Math.max(0,Math.min(1,(chlNDVI-CHL_MIN)/(CHL_MAX-CHL_MIN)));
-  const stress = (faNorm + (1-chlNorm)) / 2;
-
-  return { fa, faParams, R, G, B, chlNDVI, chlSimple, faNorm, chlNorm, stress };
-}
-
-function asymRandom(){ return (Math.random()-.5)*.08; }
-
-function extractLeafColor(dataUrl){
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const cv = document.getElementById('analysisCanvas');
-      cv.width = img.width; cv.height = img.height;
-      const c = cv.getContext('2d');
-      c.drawImage(img,0,0);
-      const pixels = c.getImageData(0,0,cv.width,cv.height).data;
-      let R=0,G=0,B=0,count=0;
-      for(let i=0;i<pixels.length;i+=16){
-        const r=pixels[i],g=pixels[i+1],b=pixels[i+2];
-        // Skip very white/light pixels (background)
-        if(r>230&&g>230&&b>230) continue;
-        R+=r; G+=g; B+=b; count++;
-      }
-      if(count>0){ R/=count; G/=count; B/=count; }
-      else { R=80; G=140; B=70; }
-      resolve({R,G,B});
-    };
-    img.src = dataUrl;
-  });
-}
-
-function showResults(res){
-  const rc = document.getElementById('resultContainer');
-  rc.classList.remove('hidden');
-
-  // Quality text
-  const fa = res.fa;
-  let grade='',color='',emoji='';
-  if(fa<0.040){ grade='I — Норма'; color='#22c55e'; emoji='🟢'; }
-  else if(fa<0.045){ grade='II — Начальные отклонения'; color='#84cc16'; emoji='🟡'; }
-  else if(fa<0.050){ grade='III — Средний уровень'; color='#eab308'; emoji='🟠'; }
-  else if(fa<0.055){ grade='IV — Существенные отклонения'; color='#f97316'; emoji='🔴'; }
-  else { grade='V — Критическое состояние'; color='#ef4444'; emoji='🚨'; }
-
-  document.getElementById('qualityResult').innerHTML =
-    `${emoji} <span style="color:${color}">${grade}</span><br>
-     <span style="font-size:1rem;color:var(--text-2)">ФА = ${fa.toFixed(4)} · ХлИ = ${res.chlNDVI.toFixed(3)}</span>`;
-
-  document.getElementById('faValue').textContent = fa.toFixed(4);
-  document.getElementById('chlValue').textContent = res.chlNDVI.toFixed(3);
-
-  const stressPct = Math.round(res.stress*100);
-  document.getElementById('stressPercent').textContent = stressPct+'%';
-  setTimeout(()=>{ document.getElementById('stressFill').style.width = stressPct+'%'; },100);
-
-  // FA Table
-  const tbody = document.getElementById('parametersTable');
-  tbody.innerHTML = '';
-  res.faParams.forEach((p,i)=>{
-    const asym = Math.abs(p.l-p.r)/(p.l+p.r);
-    tbody.innerHTML += `<tr>
-      <td>${p.name}</td>
-      <td>${p.l.toFixed(3)}</td>
-      <td>${p.r.toFixed(3)}</td>
-      <td style="color:${asym>0.05?'#f97316':'#22c55e'}">${asym.toFixed(4)}</td>
-    </tr>`;
-  });
-
-  // Chlorophyll panel
-  const swatchColor = `rgb(${Math.round(res.R)},${Math.round(res.G)},${Math.round(res.B)})`;
-  document.getElementById('chlSwatch').style.background = swatchColor;
-  const chlPct = Math.max(0, Math.min(100, (res.chlNDVI+0.2)/0.7*100));
-  setTimeout(()=>{ document.getElementById('chlMarker').style.left = chlPct+'%'; },200);
-
-  document.getElementById('chlDetails').innerHTML = `
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
-      <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;font-weight:700;margin-bottom:4px">R (красный)</div>
-      <div style="font-size:1.4rem;font-weight:700;color:#f87171">${Math.round(res.R)}</div>
-    </div>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
-      <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;font-weight:700;margin-bottom:4px">G (зелёный)</div>
-      <div style="font-size:1.4rem;font-weight:700;color:#4ade80">${Math.round(res.G)}</div>
-    </div>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
-      <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;font-weight:700;margin-bottom:4px">B (синий)</div>
-      <div style="font-size:1.4rem;font-weight:700;color:#60a5fa">${Math.round(res.B)}</div>
-    </div>
-  `;
-  document.getElementById('chlFormula').innerHTML =
-    `ХлИ (NDVI-аналог) = (G−R)/(G+R) = (${Math.round(res.G)}−${Math.round(res.R)})/(${Math.round(res.G)}+${Math.round(res.R)}) = <strong>${res.chlNDVI.toFixed(3)}</strong><br>
-     ХлИ (простой) = G/(R+G+B) = ${res.chlSimple.toFixed(3)}`;
-
-  // Update comparison
-  updateComparison();
-}
-
-// ===== RESULT TABS =====
-document.querySelectorAll('.result-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.result-tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.result-panel').forEach(p=>p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
-  });
-});
-
-// ===== MAP =====
-let map, faLayerGroup, chlLayerGroup;
-let showFA=true, showCHL=true;
-let mapData = JSON.parse(localStorage.getItem('ecoMapData')||'[]');
-
-function initMap(){
-  map = L.map('mapContainer').setView([53.9, 27.5667], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'&copy; OpenStreetMap',maxZoom:19
-  }).addTo(map);
-  faLayerGroup = L.layerGroup().addTo(map);
-  chlLayerGroup = L.layerGroup().addTo(map);
-  renderMapData();
-  document.getElementById('statPoints').textContent = mapData.length;
-}
-
-function getFAColor(fa){
-  if(fa<0.040) return '#22c55e';
-  if(fa<0.045) return '#84cc16';
-  if(fa<0.050) return '#eab308';
-  if(fa<0.055) return '#f97316';
-  return '#ef4444';
-}
-function getCHLColor(chl){
-  if(chl>0.3) return '#4ade80';
-  if(chl>0.1) return '#fde047';
-  return '#fb923c';
-}
-
-function renderMapData(){
-  faLayerGroup.clearLayers();
-  chlLayerGroup.clearLayers();
-  mapData.forEach(d=>{
-    const faC = getFAColor(d.fa);
-    const faMarker = L.circleMarker([d.lat,d.lng],{
-      radius:10, fillColor:faC, color:'#fff', weight:2, fillOpacity:.85
-    }).bindPopup(buildPopup(d));
-    faLayerGroup.addLayer(faMarker);
-
-    if(d.chl!==undefined){
-      const chlC = getCHLColor(d.chl);
-      const chlMarker = L.circleMarker([d.lat,d.lng],{
-        radius:7, fillColor:chlC, color:chlC, weight:2, fillOpacity:.6,
-        dashArray:'5,4'
-      }).bindPopup(buildPopup(d));
-      chlLayerGroup.addLayer(chlMarker);
-    }
-  });
-  document.getElementById('statPoints').textContent = mapData.length;
-}
-
-function buildPopup(d){
-  const species = {
-    'salix-alba':'Ива Белая','salix-caprea':'Ива Козья','populus':'Тополь',
-    'betula':'Берёза','quercus':'Дуб','acer':'Клён','tilia':'Липа'
-  };
-  return `<div class="map-popup-info">
-    <h4>${species[d.plant]||d.plant}</h4>
-    <p>ФА: <strong style="color:${getFAColor(d.fa)}">${d.fa.toFixed(4)}</strong></p>
-    ${d.chl!==undefined?`<p>ХлИ: <strong style="color:${getCHLColor(d.chl)}">${d.chl.toFixed(3)}</strong></p>`:''}
-    ${d.stress!==undefined?`<p>Стресс: <strong>${Math.round(d.stress*100)}%</strong></p>`:''}
-    <p style="color:#888;font-size:.75rem">${new Date(d.ts||Date.now()).toLocaleDateString('ru')}</p>
-  </div>`;
-}
-
-document.getElementById('toggleFA').addEventListener('click', function(){
-  showFA = !showFA;
-  this.classList.toggle('active', showFA);
-  if(showFA) faLayerGroup.addTo(map); else map.removeLayer(faLayerGroup);
-});
-document.getElementById('toggleCHL').addEventListener('click', function(){
-  showCHL = !showCHL;
-  this.classList.toggle('active', showCHL);
-  if(showCHL) chlLayerGroup.addTo(map); else map.removeLayer(chlLayerGroup);
-});
-
-// ===== ADD TO MAP =====
-document.getElementById('addToMapBtn').addEventListener('click', () => {
-  if(!lastResults){ showToast('Сначала проведите анализ'); return; }
-  if(!navigator.geolocation){ addMockPoint(); return; }
-  navigator.geolocation.getCurrentPosition(
-    pos => addPoint(pos.coords.latitude, pos.coords.longitude),
-    () => addMockPoint()
-  );
-});
-
-function addPoint(lat, lng){
-  const entry = {
-    lat, lng,
-    plant: selectedPlant,
-    fa: lastResults.fa,
-    chl: lastResults.chlNDVI,
-    stress: lastResults.stress,
-    ts: Date.now()
-  };
-  mapData.push(entry);
-  localStorage.setItem('ecoMapData', JSON.stringify(mapData));
-  renderMapData();
-  map.setView([lat,lng], 14);
-  showToast('📍 Метка добавлена на карту!');
-}
-
-function addMockPoint(){
-  const lat = 53.89 + Math.random()*.06;
-  const lng = 27.54 + Math.random()*.08;
-  addPoint(lat, lng);
-  showToast('📍 Добавлено (демо-координаты). Включите геолокацию для точности.');
-}
-
-// ===== MAP CONTROLS =====
-document.getElementById('loadServerDataBtn').addEventListener('click', () => {
-  renderMapData();
-  showToast('🔄 Данные обновлены');
-});
-
-document.getElementById('exportDataBtn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(mapData,null,2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'eco-map-data.json';
-  a.click();
-});
-
-document.getElementById('importDataBtn').addEventListener('click', () => {
-  document.getElementById('importFileInput').click();
-});
-document.getElementById('importFileInput').addEventListener('change', function(){
-  const file = this.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      mapData = [...mapData, ...data];
-      localStorage.setItem('ecoMapData', JSON.stringify(mapData));
-      renderMapData();
-      showToast(`✅ Импортировано ${data.length} точек`);
-    } catch(err){ showToast('❌ Ошибка формата файла'); }
-  };
-  reader.readAsText(file);
-  this.value='';
-});
-
-document.getElementById('clearMapBtn').addEventListener('click', () => {
-  if(confirm('Очистить все точки с карты?')){
-    mapData=[];
-    localStorage.removeItem('ecoMapData');
-    renderMapData();
-    showToast('🗑 Карта очищена');
-  }
-});
-
-// ===== COMPARISON CHART =====
-const speciesData = {
-  'salix-alba':{name:'Ива Белая',icon:'🌿',faBase:.041,chlBase:.28},
-  'salix-caprea':{name:'Ива Козья',icon:'🍃',faBase:.038,chlBase:.31},
-  'populus':{name:'Тополь',icon:'🌲',faBase:.036,chlBase:.33},
-  'betula':{name:'Берёза',icon:'🌳',faBase:.042,chlBase:.30},
-  'quercus':{name:'Дуб',icon:'🍂',faBase:.044,chlBase:.26},
-  'acer':{name:'Клён',icon:'🍁',faBase:.039,chlBase:.29},
-  'tilia':{name:'Липа',icon:'🌺',faBase:.037,chlBase:.32}
-};
-
-function updateComparison(){
-  const grid = document.getElementById('comparisonGrid');
-  grid.innerHTML = '';
-  Object.values(speciesData).forEach(sp=>{
-    const faW = Math.min(100, (sp.faBase/0.06)*100);
-    const chlW = Math.min(100, sp.chlBase/0.5*100);
-    const stability = Math.round((1 - sp.faBase/0.06)*100);
-    grid.innerHTML += `
-      <div class="comparison-card reveal">
-        <div class="comparison-card__icon">${sp.icon}</div>
-        <div class="comparison-card__species">${sp.name}</div>
-        <div style="font-size:.75rem;color:var(--text-3);margin-bottom:8px">Устойчивость: ${stability}%</div>
-        <div class="comparison-card__bar-wrap">
-          <div class="comparison-card__labels"><span>ФА</span><span>${sp.faBase.toFixed(3)}</span></div>
-          <div class="comparison-card__bar"><div class="comparison-card__fill fill-fa" style="width:${faW}%"></div></div>
-          <div class="comparison-card__labels" style="margin-top:4px"><span>ХлИ</span><span>${sp.chlBase.toFixed(2)}</span></div>
-          <div class="comparison-card__bar"><div class="comparison-card__fill fill-chl" style="width:${chlW}%"></div></div>
-        </div>
-      </div>`;
-  });
-  // Re-observe new cards
-  document.querySelectorAll('.reveal:not(.observed)').forEach(el=>{
-    revealObs.observe(el);
-    el.classList.add('observed');
-  });
-}
-
-// ===== TOAST =====
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 3200);
-}
-
-// ===== HEADER SCROLL =====
-window.addEventListener('scroll', () => {
-  const h = document.getElementById('site-header');
-  h.style.boxShadow = window.scrollY > 50 ? '0 4px 24px rgba(0,0,0,.12)' : 'none';
-});
-
-// ===== MOBILE THEME TOGGLE =====
-if(window.innerWidth<=900){
-  document.getElementById('mobileTheme').style.display='flex';
-}
-
-// ===== INIT =====
-window.addEventListener('DOMContentLoaded', () => {
-  initMap();
-  updateComparison();
-  // Animate hero counter
-  setTimeout(()=>animateCounter(document.getElementById('statPoints'),mapData.length),600);
-});
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
