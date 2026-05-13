@@ -248,24 +248,98 @@ function getChlColor(chl) {
 function createCustomIcon(score, type = 'fa') {
   if (type === 'fa') {
     const st = getQualityStyle(score);
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
-      <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.25"/></filter>
-      <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 26 18 26S36 31.5 36 18C36 8.06 27.94 0 18 0z"
-        fill="${st.color}" filter="url(#sh)"/>
-      <circle cx="18" cy="17" r="10" fill="white" opacity="0.92"/>
-      <text x="18" y="22" text-anchor="middle" font-size="12" font-weight="bold"
-        font-family="DM Sans,system-ui,sans-serif" fill="${st.color}">${score}</text>
+    // High-res FA marker: elegant teardrop with glow ring, inner shimmer, roman numeral
+    const c = st.color;
+    // Derive lighter/darker tones
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="60" viewBox="0 0 48 60">
+      <defs>
+        <filter id="fa-shadow-${score}" x="-40%" y="-30%" width="180%" height="200%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="${c}" flood-opacity="0.45"/>
+          <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="rgba(0,0,0,0.3)" flood-opacity="1"/>
+        </filter>
+        <radialGradient id="fa-body-${score}" cx="38%" cy="28%" r="70%">
+          <stop offset="0%" stop-color="white" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="black" stop-opacity="0.15"/>
+        </radialGradient>
+        <radialGradient id="fa-shine-${score}" cx="35%" cy="25%" r="55%">
+          <stop offset="0%" stop-color="white" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="white" stop-opacity="0"/>
+        </radialGradient>
+        <clipPath id="fa-clip-${score}">
+          <path d="M24 1C12.40 1 3 10.40 3 22c0 16.5 21 37 21 37S45 38.5 45 22C45 10.40 35.60 1 24 1z"/>
+        </clipPath>
+      </defs>
+      <!-- Outer glow ring -->
+      <ellipse cx="24" cy="22" rx="19" ry="19" fill="${c}" opacity="0.18"/>
+      <!-- Main teardrop body -->
+      <path d="M24 1C12.40 1 3 10.40 3 22c0 16.5 21 37 21 37S45 38.5 45 22C45 10.40 35.60 1 24 1z"
+        fill="${c}" filter="url(#fa-shadow-${score})"/>
+      <!-- Gradient overlay for depth -->
+      <path d="M24 1C12.40 1 3 10.40 3 22c0 16.5 21 37 21 37S45 38.5 45 22C45 10.40 35.60 1 24 1z"
+        fill="url(#fa-body-${score})" clip-path="url(#fa-clip-${score})"/>
+      <!-- Inner white circle -->
+      <circle cx="24" cy="21" r="11.5" fill="white" opacity="0.95"/>
+      <!-- Subtle ring inside circle -->
+      <circle cx="24" cy="21" r="10" fill="none" stroke="${c}" stroke-width="1" opacity="0.25"/>
+      <!-- Shine highlight on circle -->
+      <ellipse cx="20" cy="17" rx="4" ry="3" fill="url(#fa-shine-${score})" opacity="0.6"/>
+      <!-- Score number -->
+      <text x="24" y="26" text-anchor="middle" font-size="13" font-weight="800"
+        font-family="Georgia,serif" fill="${c}" letter-spacing="-0.5">${score}</text>
+      <!-- Bottom tip shine -->
+      <ellipse cx="24" cy="54" rx="2.5" ry="1.5" fill="white" opacity="0.3"/>
     </svg>`;
-    return L.divIcon({ html: svg, className:'', iconSize:[36,44], iconAnchor:[18,44], popupAnchor:[0,-46] });
+    return L.divIcon({
+      html: svg,
+      className: '',
+      iconSize: [48, 60],
+      iconAnchor: [24, 60],
+      popupAnchor: [0, -64]
+    });
   } else {
     const st = getChlColor(score);
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
-      <filter id="sh2"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.25"/></filter>
-      <path d="M16 0 L32 16 L16 32 L0 16 Z" fill="${st.color}" filter="url(#sh2)"/>
-      <text x="16" y="21" text-anchor="middle" font-size="11" font-weight="bold"
-        font-family="DM Sans,system-ui,sans-serif" fill="white">Хл</text>
+    const c = st.color;
+    const label = st.label === 'Высокий' ? '🌿' : st.label === 'Средний' ? '🍃' : st.label === 'Пониженный' ? '🍂' : '🟡';
+    // High-res Chlorophyll marker: hexagonal gem shape with depth
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="50" viewBox="0 0 44 50">
+      <defs>
+        <filter id="chl-shadow-${Math.abs(Math.round(score*1000))}" x="-50%" y="-40%" width="200%" height="220%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="${c}" flood-opacity="0.5"/>
+          <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="rgba(0,0,0,0.25)" flood-opacity="1"/>
+        </filter>
+        <radialGradient id="chl-grad-${Math.abs(Math.round(score*1000))}" cx="35%" cy="25%" r="70%">
+          <stop offset="0%" stop-color="white" stop-opacity="0.4"/>
+          <stop offset="100%" stop-color="black" stop-opacity="0.2"/>
+        </radialGradient>
+        <radialGradient id="chl-shine-${Math.abs(Math.round(score*1000))}" cx="32%" cy="22%" r="50%">
+          <stop offset="0%" stop-color="white" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="white" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <!-- Outer glow -->
+      <polygon points="22,2 40,13 40,35 22,46 4,35 4,13" fill="${c}" opacity="0.2"/>
+      <!-- Main hexagon body -->
+      <polygon points="22,4 38,13 38,33 22,44 6,33 6,13"
+        fill="${c}" filter="url(#chl-shadow-${Math.abs(Math.round(score*1000))})"/>
+      <!-- Depth overlay -->
+      <polygon points="22,4 38,13 38,33 22,44 6,33 6,13"
+        fill="url(#chl-grad-${Math.abs(Math.round(score*1000))})"/>
+      <!-- Inner white circle -->
+      <circle cx="22" cy="24" r="10" fill="white" opacity="0.93"/>
+      <!-- Inner ring -->
+      <circle cx="22" cy="24" r="8.5" fill="none" stroke="${c}" stroke-width="1" opacity="0.3"/>
+      <!-- Shine -->
+      <ellipse cx="18" cy="19" rx="4" ry="2.5" fill="url(#chl-shine-${Math.abs(Math.round(score*1000))})" opacity="0.7"/>
+      <!-- Leaf icon shape (simplified) -->
+      <text x="22" y="29" text-anchor="middle" font-size="12" fill="${c}" font-family="sans-serif">Хл</text>
     </svg>`;
-    return L.divIcon({ html: svg, className:'', iconSize:[32,40], iconAnchor:[16,40], popupAnchor:[0,-42] });
+    return L.divIcon({
+      html: svg,
+      className: '',
+      iconSize: [44, 50],
+      iconAnchor: [22, 50],
+      popupAnchor: [0, -54]
+    });
   }
 }
 
@@ -282,43 +356,70 @@ function renderPins(pins) {
     const chlSt = pin.chlIndex !== undefined ? getChlColor(pin.chlIndex) : { color: '#999', label: '—' };
     const faMarker = L.marker([pin.lat, pin.lng], { icon: createCustomIcon(pin.score, 'fa') });
     faMarker.bindPopup(`
-      <div style="font-family:'DM Sans',system-ui,sans-serif;min-width:210px;overflow:hidden">
-        <div style="background:${st.color};color:white;padding:10px 14px;font-weight:700;font-size:13px;margin:-12px -12px 10px">
-          ${st.emoji} ${st.label} — Слой ФА
+      <div style="font-family:'DM Sans',system-ui,sans-serif;min-width:230px;overflow:hidden;border-radius:18px">
+        <div style="background:linear-gradient(135deg,${st.color},${st.color}dd);color:white;padding:14px 18px;font-weight:700;font-size:13px;letter-spacing:0.2px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">${st.emoji}</span>
+          <span>${st.label}</span>
+          <span style="margin-left:auto;font-size:10px;font-weight:600;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:20px;letter-spacing:0.5px">Слой ФА</span>
         </div>
-        <div style="font-size:13px;color:#555;line-height:1.8;padding:0 2px 2px">
-          <b>Растение:</b> ${pin.plant || '—'}<br>
-          <b>ФА:</b> ${pin.asymmetry !== undefined ? Number(pin.asymmetry).toFixed(4) : '—'}<br>
-          <b>Хлорофилл:</b> <span style="color:${chlSt.color};font-weight:600">${chlValue} (${chlSt.label})</span><br>
-          <b>Стресс:</b> ${stressValue}<br>
-          <b>Дата:</b> ${date}
+        <div style="padding:14px 16px;background:#ffffff;font-size:13px;line-height:2;color:#374151">
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:0 12px;align-items:center">
+            <span style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Растение</span>
+            <span style="font-weight:600;color:#111827">${pin.plant || '—'}</span>
+            <span style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">ФА</span>
+            <span style="font-family:monospace;font-weight:700;color:${st.color}">${pin.asymmetry !== undefined ? Number(pin.asymmetry).toFixed(4) : '—'}</span>
+            <span style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Хлорофилл</span>
+            <span style="font-weight:700;color:${chlSt.color}">${chlValue} <span style="font-weight:500;color:#6b7280">(${chlSt.label})</span></span>
+            <span style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Стресс</span>
+            <span style="font-weight:700;color:#374151">${stressValue}</span>
+            <span style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Дата</span>
+            <span style="color:#6b7280">${date}</span>
+          </div>
         </div>
       </div>
-    `, { maxWidth:260 });
+    `, { maxWidth: 280, className: 'eco-popup' });
     faMarkersLayer.addLayer(faMarker);
     if (pin.chlIndex !== undefined) {
       const offset = 0.0005;
       const chlMarker = L.marker([pin.lat + offset, pin.lng + offset], { icon: createCustomIcon(pin.chlIndex, 'chl') });
       chlMarker.bindPopup(`
-        <div style="font-family:'DM Sans',system-ui,sans-serif;min-width:210px;overflow:hidden">
-          <div style="background:${chlSt.color};color:white;padding:10px 14px;font-weight:700;font-size:13px;margin:-12px -12px 10px">
-            🌿 ${chlSt.label} — Слой хлорофилла
+        <div style="font-family:'DM Sans',system-ui,sans-serif;min-width:230px;overflow:hidden;border-radius:18px">
+          <div style="background:linear-gradient(135deg,${chlSt.color},${chlSt.color}dd);color:white;padding:14px 18px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px">🌿</span>
+            <span>${chlSt.label}</span>
+            <span style="margin-left:auto;font-size:10px;font-weight:600;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:20px;letter-spacing:0.5px">Хлорофилл</span>
           </div>
-          <div style="font-size:13px;color:#555;line-height:1.8;padding:0 2px 2px">
-            <b>Растение:</b> ${pin.plant || '—'}<br>
-            <b>ХлИ:</b> ${chlValue}<br>
-            <b>ФА балл:</b> ${st.emoji} ${st.label}<br>
-            <b>Стресс:</b> ${stressValue}<br>
-            <b>Дата:</b> ${date}
+          <div style="padding:14px 16px;background:#ffffff;font-size:13px;line-height:2;color:#374151">
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:0 12px;align-items:center">
+              <span style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Растение</span>
+              <span style="font-weight:600;color:#111827">${pin.plant || '—'}</span>
+              <span style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">ХлИ</span>
+              <span style="font-family:monospace;font-weight:700;color:${chlSt.color}">${chlValue}</span>
+              <span style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">ФА балл</span>
+              <span style="font-weight:600;color:#374151">${st.emoji} ${st.label}</span>
+              <span style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Стресс</span>
+              <span style="font-weight:700;color:#374151">${stressValue}</span>
+              <span style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Дата</span>
+              <span style="color:#6b7280">${date}</span>
+            </div>
           </div>
         </div>
-      `, { maxWidth:260 });
+      `, { maxWidth: 280, className: 'eco-popup' });
       chlMarkersLayer.addLayer(chlMarker);
     }
   });
   applyLayerVisibility();
   updateComparison(pins);
   updateDynamicRecommendations(pins);
+
+  // Update map stat pills
+  const statPins = document.getElementById('statPinsCount');
+  const statSpecies = document.getElementById('statSpeciesCount');
+  if (statPins) statPins.textContent = (pins || []).length;
+  if (statSpecies) {
+    const uniqueSpecies = new Set((pins || []).map(p => p.plant).filter(Boolean));
+    statSpecies.textContent = uniqueSpecies.size;
+  }
 }
 
 function applyLayerVisibility() {
@@ -429,12 +530,33 @@ async function saveSharedPin(pin) {
 
 function initMap() {
   if (map) return;
-  map = L.map('mapContainer', { center:[53.9,27.5], zoom:6, zoomControl:false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains:'abcd', maxZoom:19
+  map = L.map('mapContainer', {
+    center: [53.9, 27.5],
+    zoom: 6,
+    zoomControl: false,
+    attributionControl: true,
+  });
+
+  // Choose tile based on theme — voyager is neutral warm-gray, works both modes
+  const isDark = document.body.classList.contains('dark-theme');
+  const lightTile = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+  const darkTile  = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+  const tileLayer = L.tileLayer(isDark ? darkTile : lightTile, {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19,
   }).addTo(map);
-  L.control.zoom({ position:'bottomright' }).addTo(map);
+
+  // Re-apply correct tile on theme toggle
+  document.querySelectorAll('#themeToggle, #themeToggleMobile').forEach(el => {
+    el.addEventListener('change', () => {
+      const dark = el.checked;
+      tileLayer.setUrl(dark ? darkTile : lightTile);
+    });
+  });
+
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
   faMarkersLayer  = L.layerGroup().addTo(map);
   chlMarkersLayer = L.layerGroup().addTo(map);
   loadSharedPins();
@@ -750,7 +872,8 @@ function showResults() {
     diagBlock.style.borderLeftColor = diag.color;
     diagBlock.style.display = 'flex';
   }
-  const tbody = document.getElementById('parametersTable');
+  const tableEl = document.getElementById('parametersTable');
+  const tbody = tableEl ? tableEl.querySelector('tbody') : null;
   if (tbody) {
     tbody.innerHTML = '';
     const faParams = generateFAParameters(asymmetry);
@@ -839,22 +962,11 @@ document.getElementById('addToMapBtn')?.addEventListener('click', () => {
 // =============================================
 // MAP ACTION BUTTONS
 // =============================================
-document.getElementById('clearMapBtn')?.addEventListener('click', async () => {
-  if (!confirm('Очистить все метки с карты? Это удалит данные и на сервере.')) return;
+document.getElementById('clearMapBtn')?.addEventListener('click', () => {
+  if (!confirm('Очистить все метки локально? Данные на сервере сохранятся и загрузятся при следующем обновлении.')) return;
   localStorage.removeItem('ecoPins');
   renderPins([]);
-  try {
-    const putRes = await fetch(JSONBIN_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
-      body: JSON.stringify({ pins: [] })
-    });
-    if (!putRes.ok) throw new Error(`HTTP ${putRes.status}`);
-    showToast('Карта очищена (локально и на сервере)', 'warning');
-  } catch(err) {
-    console.warn('Clear on server failed:', err.message);
-    showToast('Карта очищена локально (ошибка сервера)', 'warning');
-  }
+  showToast('Локальные метки очищены 🗑', 'warning');
 });
 document.getElementById('exportDataBtn')?.addEventListener('click', () => {
   const pins = JSON.parse(localStorage.getItem('ecoPins') || '[]');
