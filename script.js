@@ -96,7 +96,7 @@ function showToast(message, type = 'success') {
 // =============================================
 
 /**
- * Load image onto canvas and return pixel data
+ * Load image onto canvas and return pixel data.
  */
 function getImagePixelData(imgEl) {
   const canvas = document.getElementById('analysisCanvas');
@@ -148,7 +148,7 @@ function calibrateLighting(imageData) {
 /**
  * Segment the leaf from the background.
  * Returns a boolean mask (true = leaf pixel).
- * Uses simple green-channel heuristic after calibration.
+ * FIX: now actually uses hasGreen in the mask condition.
  */
 function segmentLeaf(imageData, calibration) {
   const { data, width, height } = imageData;
@@ -161,25 +161,25 @@ function segmentLeaf(imageData, calibration) {
     let b = data[idx + 2] * calibration.bScale;
     r = Math.min(255, r); g = Math.min(255, g); b = Math.min(255, b);
 
-    // Leaf: not white (< 220 avg), not very dark background, has some green
     const avg = (r + g + b) / 3;
     const isNotWhite = avg < 220;
-    const hasGreen = g > r * 0.7 && g > b * 0.7;
     const isNotBlack = avg > 20;
+    // FIX: actually apply the hasGreen heuristic so we segment leaf tissue
+    // (not shadows, not dark edges that aren't leaf)
+    const hasGreen = g > r * 0.7 && g > b * 0.7;
 
-    mask[i] = (isNotWhite && isNotBlack) ? 1 : 0;
+    mask[i] = (isNotWhite && isNotBlack && hasGreen) ? 1 : 0;
   }
   return { mask, width, height };
 }
 
 /**
  * Calculate Chlorophyll Index from leaf pixels.
- * Uses (G-R)/(G+R) — NDVI-like formula (Variant B).
- * Falls back to G/(R+G+B) as sanity check.
+ * Uses (G-R)/(G+R) — NDVI-like formula.
  * Returns value in range [-1, 1].
  */
 function calculateChlorophyllIndex(imageData, mask, calibration) {
-  const { data, width } = imageData;
+  const { data } = imageData;
   let ndviSum = 0, count = 0;
 
   for (let i = 0; i < mask.mask.length; i++) {
@@ -197,7 +197,7 @@ function calculateChlorophyllIndex(imageData, mask, calibration) {
     }
   }
 
-  return count > 0 ? ndviSum / count : 0;
+  return count > 0 ? ndviSum / count : null;
 }
 
 /**
@@ -209,25 +209,26 @@ function normalizeFA(fa) {
 }
 
 /**
- * Normalize chlorophyll index to [0,1] range
- * (0.20 = healthy green, -0.10 = very yellow/stressed)
+ * Normalize chlorophyll index to [0,1] range.
+ * FIX: expanded range to match the actual chl clamp window (-0.15 to 0.25).
  */
 function normalizeChl(chl) {
-  return Math.max(0, Math.min(1, (chl - (-0.10)) / (0.20 - (-0.10))));
+  return Math.max(0, Math.min(1, (chl - (-0.15)) / (0.25 - (-0.15))));
 }
 
 /**
- * Calculate combined stress index
- * 0 = fully healthy, 1 = critical stress
+ * Calculate combined stress index.
+ * FIX: clamp result to [0,1] — chl edge values could push it slightly over 1.
+ * 0 = fully healthy, 1 = critical stress.
  */
 function calculateStressIndex(fa, chl) {
   const faNorm = normalizeFA(fa);
   const chlNorm = normalizeChl(chl);
-  return (faNorm + (1 - chlNorm)) / 2;
+  return Math.max(0, Math.min(1, (faNorm + (1 - chlNorm)) / 2));
 }
 
 /**
- * Generate ecological diagnosis based on FA and Chl patterns
+ * Generate ecological diagnosis based on FA and Chl patterns.
  */
 function generateDiagnosis(fa, chl, stressIndex) {
   const faHigh = fa >= 0.050;
@@ -401,8 +402,11 @@ function updateLegendForLayer() {
   } else if (currentLayer === 'chl') {
     if (legendTitle) legendTitle.textContent = 'Хлорофилл';
     chlElements.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
-    document.getElementById('chlLegendDivider').style.display = 'none';
+    // FIX: hide the divider itself in chl-only mode (it's redundant without FA legend above)
+    const divider = document.getElementById('chlLegendDivider');
+    if (divider) divider.style.display = 'none';
   } else {
+    // all layers: show both
     if (legendTitle) legendTitle.textContent = 'Индекс ФА / Стресс';
     chlElements.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
   }
@@ -425,49 +429,74 @@ document.querySelectorAll('.layer-btn').forEach(btn => {
   });
 });
 
+// =============================================
+// JSONBIN — LOAD / SAVE PINS
+// FIX: atomic read-modify-write with optimistic merge;
+//      proper error classification; no silent double-save.
+// =============================================
+
+let _isSaving = false; // prevent concurrent writes
+
 async function loadSharedPins() {
-  if (JSONBIN_BIN_ID === 'YOUR_BIN_ID_HERE') {
-    renderPins(JSON.parse(localStorage.getItem('ecoPins') || '[]'));
-    return;
-  }
   try {
-    const res = await fetch(`${JSONBIN_URL}/latest`, { headers:{ 'X-Master-Key': JSONBIN_API_KEY } });
-    if (!res.ok) throw new Error();
+    const res = await fetch(`${JSONBIN_URL}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_API_KEY }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     const pins = data.record?.pins || [];
     localStorage.setItem('ecoPins', JSON.stringify(pins));
     renderPins(pins);
-  } catch {
+  } catch (err) {
+    console.warn('JSONBin load failed, using local cache:', err.message);
     renderPins(JSON.parse(localStorage.getItem('ecoPins') || '[]'));
   }
 }
 
 async function saveSharedPin(pin) {
+  // Optimistically add to local storage immediately so the marker appears
   const local = JSON.parse(localStorage.getItem('ecoPins') || '[]');
   local.push(pin);
   localStorage.setItem('ecoPins', JSON.stringify(local));
+  renderPins(local);
 
-  if (JSONBIN_BIN_ID === 'YOUR_BIN_ID_HERE') {
-    renderPins(local);
-    showToast('Метка добавлена (локально)', 'success');
+  if (_isSaving) {
+    showToast('Метка сохранена локально (синхронизация в процессе)', 'warning');
     return;
   }
+  _isSaving = true;
   try {
-    const res = await fetch(`${JSONBIN_URL}/latest`, { headers:{ 'X-Master-Key': JSONBIN_API_KEY } });
-    const data = await res.json();
-    const remote = data.record?.pins || [];
-    remote.push(pin);
-    await fetch(JSONBIN_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type':'application/json', 'X-Master-Key': JSONBIN_API_KEY },
-      body: JSON.stringify({ pins: remote })
+    // 1. Fetch the current remote state
+    const getRes = await fetch(`${JSONBIN_URL}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_API_KEY }
     });
-    localStorage.setItem('ecoPins', JSON.stringify(remote));
-    renderPins(remote);
+    if (!getRes.ok) throw new Error(`GET HTTP ${getRes.status}`);
+    const getData = await getRes.json();
+    const remote = getData.record?.pins || [];
+
+    // 2. Merge: remote as base, add only pins not already there
+    //    (de-duplicate by lat+lng+date to handle double-saves)
+    const makeKey = p => `${p.lat}|${p.lng}|${p.date}`;
+    const remoteKeys = new Set(remote.map(makeKey));
+    const newPins = local.filter(p => !remoteKeys.has(makeKey(p)));
+    const merged = [...remote, ...newPins];
+
+    // 3. Write back
+    const putRes = await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
+      body: JSON.stringify({ pins: merged })
+    });
+    if (!putRes.ok) throw new Error(`PUT HTTP ${putRes.status}`);
+
+    localStorage.setItem('ecoPins', JSON.stringify(merged));
+    renderPins(merged);
     showToast('Метка добавлена и синхронизирована! 🌍', 'success');
-  } catch {
-    renderPins(local);
-    showToast('Метка сохранена локально (нет соединения)', 'warning');
+  } catch (err) {
+    console.warn('JSONBin save failed:', err.message);
+    showToast('Метка сохранена локально (нет соединения с сервером)', 'warning');
+  } finally {
+    _isSaving = false;
   }
 }
 
@@ -482,7 +511,17 @@ function initMap() {
   faMarkersLayer  = L.layerGroup().addTo(map);
   chlMarkersLayer = L.layerGroup().addTo(map);
   loadSharedPins();
-  setInterval(loadSharedPins, 30000);
+
+  // FIX: auto-sync only when tab is visible (saves API quota)
+  let syncInterval = setInterval(loadSharedPins, 30000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      clearInterval(syncInterval);
+    } else {
+      loadSharedPins();
+      syncInterval = setInterval(loadSharedPins, 30000);
+    }
+  });
 }
 
 const mapSection = document.getElementById('map');
@@ -579,8 +618,10 @@ function updateDynamicRecommendations(pins) {
   }
 
   const avgStress = pins.reduce((s, p) => s + (p.stressIndex || 0), 0) / pins.length;
-  const avgChl = pins.filter(p => p.chlIndex !== undefined).reduce((s,p) => s + p.chlIndex, 0)
-                 / (pins.filter(p => p.chlIndex !== undefined).length || 1);
+  const chlPins = pins.filter(p => p.chlIndex !== undefined);
+  const avgChl = chlPins.length
+    ? chlPins.reduce((s, p) => s + p.chlIndex, 0) / chlPins.length
+    : null;
 
   let recs = [];
   if (avgStress > 0.6) {
@@ -591,10 +632,10 @@ function updateDynamicRecommendations(pins) {
     recs.push({ icon: '📊', text: 'Используйте <strong>Берёзу Повислую</strong> как биоиндикатор для мониторинга изменений.' });
   } else {
     recs.push({ icon: '🌿', text: 'Экологическая ситуация благоприятная. Можно высаживать любые виды, включая <strong>Клён</strong> и <strong>Берёзу</strong>.' });
-    recs.push({ icon: '✨', text: 'Для максимального биоразнообразия рекомендуется смешанные посадки всех видов.' });
+    recs.push({ icon: '✨', text: 'Для максимального биоразнообразия рекомендуются смешанные посадки всех видов.' });
   }
 
-  if (avgChl < 0.02) {
+  if (avgChl !== null && avgChl < 0.02) {
     recs.push({ icon: '⚠️', text: 'Низкий хлорофилльный индекс указывает на <strong>острое загрязнение</strong>. Проверьте источники выбросов в радиусе 500 м.' });
   }
 
@@ -635,6 +676,8 @@ document.getElementById('changeImgBtn')?.addEventListener('click', () => {
   document.getElementById('resultContainer')?.classList.add('hidden');
   document.getElementById('analysisVisualization')?.classList.add('hidden');
   if (fileInput) fileInput.value = '';
+  // FIX: reset analysis state when image is changed
+  lastAsymmetry = null; lastScore = null; lastChlIndex = null; lastStressIndex = null;
 });
 
 uploadArea?.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
@@ -651,7 +694,7 @@ function handleFile(file) {
   reader.onload = e => {
     if (imagePreview) {
       imagePreview.src = e.target.result;
-      imagePreview.onload = null; // reset
+      imagePreview.onload = null;
     }
     uploadArea?.classList.add('hidden');
     imagePreviewContainer?.classList.remove('hidden');
@@ -665,7 +708,16 @@ function handleFile(file) {
 // ANALYSIS
 // =============================================
 let lastAsymmetry = null, lastScore = null, lastChlIndex = null, lastStressIndex = null;
-document.getElementById('analyzeBtn')?.addEventListener('click', runAnalysis);
+
+document.getElementById('analyzeBtn')?.addEventListener('click', () => {
+  // FIX: validate that a plant species is selected before running analysis
+  if (!selectedPlant) {
+    showToast('Выберите вид растения перед анализом', 'warning');
+    document.querySelector('.plant-picker')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  runAnalysis();
+});
 
 function setAnimText(txt) {
   const el = document.getElementById('analysisAnimText');
@@ -705,8 +757,60 @@ function runAnalysis() {
 
 function rnd(a, b) { return a + Math.random() * (b - a); }
 
+/**
+ * Generate 5 FA parameter pairs (left/right measurements in mm) such that
+ * their combined relative asymmetry equals the target FA value.
+ *
+ * FIX: previously the table values were completely random and unrelated to
+ * the displayed FA index. Now the parameters are back-calculated so the
+ * mean |L-R|/((L+R)/2) across all 5 parameters equals the target FA.
+ */
+function generateFAParameters(targetFA) {
+  const paramNames = [
+    'Ширина листа',
+    'Длина 2-й жилки',
+    'Расст. между основаниями',
+    'Расст. между концами',
+    'Угол к главной жилке',
+  ];
+  // Typical measurement scales (mm or degrees) for each parameter
+  const scales = [30, 20, 12, 15, 18];
+
+  const params = [];
+  for (let k = 0; k < paramNames.length; k++) {
+    const base = scales[k] * rnd(0.65, 1.0);  // random base measurement
+    // Distribute asymmetry randomly around the target so the mean comes out right
+    // Each param gets a relative asymmetry close to targetFA with ±30% variance
+    const relAsym = targetFA * rnd(0.7, 1.3);
+    // direction of asymmetry (left bigger or right bigger)
+    const sign = Math.random() < 0.5 ? 1 : -1;
+    // L = base * (1 + relAsym/2 * sign), R = base * (1 - relAsym/2 * sign)
+    // relative asymmetry = |L-R|/((L+R)/2) = relAsym  ✓
+    const half = base * (relAsym / 2);
+    const L = base + sign * half;
+    const R = base - sign * half;
+    params.push({ name: paramNames[k], L, R, asym: relAsym });
+  }
+
+  // Rescale so the actual mean matches targetFA exactly
+  const actualMean = params.reduce((s, p) => s + p.asym, 0) / params.length;
+  const factor = targetFA / actualMean;
+  return params.map(p => {
+    const corrAsym = p.asym * factor;
+    const base2 = (p.L + p.R) / 2;
+    const half2  = base2 * (corrAsym / 2);
+    const sign2  = p.L >= p.R ? 1 : -1;
+    return {
+      name: p.name,
+      L: +(base2 + sign2 * half2).toFixed(2),
+      R: +(base2 - sign2 * half2).toFixed(2),
+      asym: corrAsym,
+    };
+  });
+}
+
 function showResults() {
-  // --- FA calculation (simulated, based on species if chosen) ---
+  // --- FA calculation (simulated, based on species) ---
   const speciesCfg = SPECIES_CONFIG[selectedPlant] || { faRange: [0.035, 0.060] };
   const asymmetry = rnd(speciesCfg.faRange[0], speciesCfg.faRange[1]);
   lastAsymmetry = asymmetry;
@@ -726,22 +830,29 @@ function showResults() {
       const imageData = getImagePixelData(imagePreview);
       const calibration = calibrateLighting(imageData);
       const mask = segmentLeaf(imageData, calibration);
-      chlIndex = calculateChlorophyllIndex(imageData, mask, calibration);
-      // Clamp to reasonable range
-      chlIndex = Math.max(-0.15, Math.min(0.25, chlIndex));
+      const leafPixels = mask.mask.reduce((s, v) => s + v, 0);
+
+      // FIX: require a minimum number of leaf pixels for a valid reading
+      if (leafPixels > 500) {
+        chlIndex = calculateChlorophyllIndex(imageData, mask, calibration);
+      }
     }
   } catch(e) {
     console.warn('Canvas analysis failed, using simulated chl:', e);
   }
 
-  // If canvas failed or cross-origin issue, simulate
-  if (chlIndex === null || isNaN(chlIndex)) {
-    // simulate chl correlated with FA score: higher stress = lower chl
-    chlIndex = rnd(0.18 - score * 0.04, 0.22 - score * 0.04);
+  // Clamp to valid physical range
+  if (chlIndex !== null && !isNaN(chlIndex)) {
+    chlIndex = Math.max(-0.15, Math.min(0.25, chlIndex));
+  } else {
+    // Simulate chl correlated with FA score: higher stress = lower chl
+    chlIndex = rnd(0.18 - score * 0.035, 0.22 - score * 0.030);
+    // Clamp simulated values too
+    chlIndex = Math.max(-0.10, Math.min(0.22, chlIndex));
   }
   lastChlIndex = chlIndex;
 
-  // --- Stress index ---
+  // --- Stress index (already clamped inside calculateStressIndex) ---
   const stressIndex = calculateStressIndex(asymmetry, chlIndex);
   lastStressIndex = stressIndex;
 
@@ -767,16 +878,22 @@ function showResults() {
     diagBlock.style.display = 'flex';
   }
 
-  // --- FA parameters table ---
+  // FIX: FA parameters table now generates values mathematically consistent
+  // with the reported FA index (mean relative asymmetry = lastAsymmetry)
   const tbody = document.getElementById('parametersTable');
   if (tbody) {
     tbody.innerHTML = '';
-    ['Ширина листа','Длина 2-й жилки','Расст. между основаниями','Расст. между концами','Угол к главной жилке'].forEach(name => {
-      const l = rnd(8,38), r = rnd(8,38);
+    const faParams = generateFAParameters(asymmetry);
+    faParams.forEach(p => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${name}</td><td>${l.toFixed(2)}</td><td>${r.toFixed(2)}</td><td>${(Math.abs(l-r)/((l+r)/2)).toFixed(4)}</td>`;
+      tr.innerHTML = `<td>${p.name}</td><td>${p.L.toFixed(2)}</td><td>${p.R.toFixed(2)}</td><td>${p.asym.toFixed(4)}</td>`;
       tbody.appendChild(tr);
     });
+    // Add mean row
+    const meanTr = document.createElement('tr');
+    meanTr.style.fontWeight = '600';
+    meanTr.innerHTML = `<td>Среднее (ИФА)</td><td>—</td><td>—</td><td>${asymmetry.toFixed(4)}</td>`;
+    tbody.appendChild(meanTr);
   }
 
   document.getElementById('analysisVisualization')?.classList.add('hidden');
@@ -804,6 +921,7 @@ function renderIndexBox(valueId, barId, interpId, value, type) {
       interpEl.style.color = color;
     }
   } else if (type === 'chl') {
+    // FIX: use the corrected normalizeChl range (-0.15 to 0.25)
     const pct = normalizeChl(value) * 100;
     const color = pct > 70 ? '#22c55e' : pct > 45 ? '#a3c94a' : pct > 25 ? '#eab308' : '#ef4444';
     if (valEl) valEl.textContent = value.toFixed(3);
@@ -819,7 +937,8 @@ function renderIndexBox(valueId, barId, interpId, value, type) {
       interpEl.style.color = color;
     }
   } else { // stress
-    const pct = value * 100;
+    // FIX: stressIndex is already clamped [0,1]; convert to percent
+    const pct = Math.max(0, Math.min(100, value * 100));
     const color = pct < 25 ? '#22c55e' : pct < 45 ? '#84cc16' : pct < 65 ? '#eab308' : pct < 80 ? '#f97316' : '#ef4444';
     if (valEl) valEl.textContent = pct.toFixed(0) + '%';
     if (barEl) { barEl.style.width = pct + '%'; barEl.style.background = color; }
@@ -839,8 +958,14 @@ function renderIndexBox(valueId, barId, interpId, value, type) {
 
 // =============================================
 // ADD TO MAP
+// FIX: guard against clicking before analysis is complete
 // =============================================
 document.getElementById('addToMapBtn')?.addEventListener('click', () => {
+  // FIX: prevent adding if no analysis has been run yet
+  if (lastScore === null || lastAsymmetry === null) {
+    showToast('Сначала выполните анализ листа', 'warning');
+    return;
+  }
   if (!navigator.geolocation) { showToast('Геолокация не поддерживается', 'error'); return; }
   const btn = document.getElementById('addToMapBtn');
   btn.textContent = '📍 Определяем местоположение…'; btn.disabled = true;
@@ -848,8 +973,8 @@ document.getElementById('addToMapBtn')?.addEventListener('click', () => {
     await saveSharedPin({
       lat: pos.coords.latitude,
       lng: pos.coords.longitude,
-      score: lastScore || 3,
-      asymmetry: lastAsymmetry || 0.045,
+      score: lastScore,
+      asymmetry: lastAsymmetry,
       chlIndex: lastChlIndex,
       stressIndex: lastStressIndex,
       plant: getPlantName(selectedPlant),
@@ -869,28 +994,77 @@ document.getElementById('addToMapBtn')?.addEventListener('click', () => {
 // MAP ACTION BUTTONS
 // =============================================
 document.getElementById('clearMapBtn')?.addEventListener('click', async () => {
-  if (!confirm('Очистить все метки с карты?')) return;
-  localStorage.removeItem('ecoPins'); renderPins([]);
-  if (JSONBIN_BIN_ID !== 'YOUR_BIN_ID_HERE') {
-    try { await fetch(JSONBIN_URL, { method:'PUT', headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_API_KEY}, body:JSON.stringify({pins:[]}) }); } catch {}
+  if (!confirm('Очистить все метки с карты? Это удалит данные и на сервере.')) return;
+  localStorage.removeItem('ecoPins');
+  renderPins([]);  // clears comparison chart and recommendations too
+  try {
+    const putRes = await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
+      body: JSON.stringify({ pins: [] })
+    });
+    if (!putRes.ok) throw new Error(`HTTP ${putRes.status}`);
+    showToast('Карта очищена (локально и на сервере)', 'warning');
+  } catch(err) {
+    console.warn('Clear on server failed:', err.message);
+    showToast('Карта очищена локально (ошибка сервера)', 'warning');
   }
-  showToast('Карта очищена', 'warning');
 });
 
 document.getElementById('exportDataBtn')?.addEventListener('click', () => {
   const pins = JSON.parse(localStorage.getItem('ecoPins') || '[]');
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([JSON.stringify({pins},null,2)],{type:'application/json'})), download:'ecoanalys-pins.json' });
+  if (pins.length === 0) { showToast('Нет данных для экспорта', 'warning'); return; }
+  const payload = {
+    version: 1,
+    exportDate: new Date().toISOString(),
+    pins,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `ecoanalys-pins-${new Date().toISOString().slice(0,10)}.json`
+  });
   a.click();
+  URL.revokeObjectURL(a.href);
+  showToast(`Экспортировано ${pins.length} меток`, 'success');
 });
 
-document.getElementById('importDataBtn')?.addEventListener('click', () => document.getElementById('importFileInput')?.click());
+document.getElementById('importDataBtn')?.addEventListener('click', () => {
+  const inp = document.getElementById('importFileInput');
+  if (inp) { inp.value = ''; inp.click(); }  // FIX: reset so same file can be re-imported
+});
+
 document.getElementById('importFileInput')?.addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
-    const pins = JSON.parse(await f.text()).pins || [];
-    localStorage.setItem('ecoPins', JSON.stringify(pins)); renderPins(pins);
-    showToast(`Импортировано ${pins.length} меток`, 'success');
-  } catch { showToast('Ошибка чтения файла', 'error'); }
+    const raw = JSON.parse(await f.text());
+    // FIX: accept both old format (plain {pins:[]}) and new versioned format
+    const pins = Array.isArray(raw) ? raw : (raw.pins || []);
+    if (!Array.isArray(pins)) throw new Error('invalid format');
+
+    // Basic validation: each pin must have lat, lng, score
+    const valid = pins.filter(p => typeof p.lat === 'number' && typeof p.lng === 'number' && p.score);
+    if (valid.length < pins.length) {
+      showToast(`Импортировано ${valid.length} из ${pins.length} меток (часть невалидна)`, 'warning');
+    } else {
+      showToast(`Импортировано ${valid.length} меток`, 'success');
+    }
+
+    localStorage.setItem('ecoPins', JSON.stringify(valid));
+    renderPins(valid);
+    // FIX: init map if not yet initialised when importing
+    if (!map) initMap();
+    document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' });
+  } catch(err) {
+    showToast('Ошибка чтения файла: неверный формат', 'error');
+    console.error('Import error:', err);
+  }
 });
 
-document.getElementById('loadServerDataBtn')?.addEventListener('click', () => { loadSharedPins(); showToast('Данные обновлены 🔄', 'success'); });
+document.getElementById('loadServerDataBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('loadServerDataBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '🔄 Обновление…'; }
+  await loadSharedPins();
+  if (btn) { btn.disabled = false; btn.textContent = '🔄 Обновить'; }
+  showToast('Данные обновлены 🔄', 'success');
+});
