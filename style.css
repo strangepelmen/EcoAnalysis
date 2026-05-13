@@ -1036,3 +1036,349 @@ a:hover { color: var(--green-500); }
   .logo-text { font-size: 17px; }
   .section-title { font-size: 24px; }
 }
+/* =============================================
+   NEW FEATURES — CHLOROPHYLL / DUAL INDEX / MAP LAYERS
+   Added on top of existing styles, design unchanged
+   ============================================= */
+
+/* ─── CALIBRATION HINT ──────────────────────── */
+.calibration-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--green-50);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+.dark-theme .calibration-hint { background: rgba(34,197,94,0.07); }
+.calibration-hint__icon { font-size: 18px; flex-shrink: 0; }
+.calibration-hint strong { color: var(--green-700); }
+
+/* ─── DUAL INDEX ROW ────────────────────────── */
+.dual-index-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-top: 1px solid var(--border);
+}
+
+.index-box {
+  background: var(--surface);
+  padding: 20px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.index-box__icon { font-size: 22px; }
+.index-box__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+.index-box__sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.index-box__value {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+  margin: 4px 0;
+}
+.dark-theme .index-box__value { color: var(--green-50); }
+.index-box__bar-wrap {
+  height: 6px;
+  background: var(--bg-alt);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.index-box__bar {
+  height: 100%;
+  border-radius: 100px;
+  width: 0%;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1), background 0.4s;
+}
+.index-box__interp {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.index-box--fa   { border-left: 3px solid #22c55e; }
+.index-box--chl  { border-left: 3px solid #1a7a2e; }
+.index-box--stress { border-left: 3px solid #f97316; }
+
+/* ─── DIAGNOSIS BLOCK ───────────────────────── */
+.diagnosis-block {
+  display: none;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 22px;
+  border-left: 4px solid #22c55e;
+  background: var(--bg-alt);
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+.diagnosis-block strong { color: var(--text); }
+.diag-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+
+/* ─── ANALYSIS STEPS (6 steps) ──────────────── */
+/* progress-steps already handles flex-wrap — no changes needed */
+
+/* ─── LAYER SWITCHER ────────────────────────── */
+.layer-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.layer-switcher__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.layer-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.layer-btn {
+  padding: 7px 16px;
+  border-radius: 100px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.layer-btn:hover {
+  border-color: var(--green-500);
+  color: var(--green-700);
+  background: var(--green-50);
+}
+.layer-btn.active {
+  border-color: var(--green-600);
+  background: var(--green-600);
+  color: white;
+}
+.dark-theme .layer-btn.active { background: var(--green-700); border-color: var(--green-700); }
+.layer-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-basis: 100%;
+  margin-top: -4px;
+}
+
+/* ─── MAP LEGEND UPDATES ────────────────────── */
+.legend-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--green-600);
+  margin-bottom: 4px;
+}
+.legend-title--chl { color: #1a7a2e; margin-top: 6px; }
+.legend-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 0 4px;
+}
+.legend-dot--chl {
+  width: 10px; height: 10px;
+  border-radius: 2px; /* diamond-ish */
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+/* ─── COMPARISON CHART ──────────────────────── */
+.comparison-wrap {
+  margin-top: 8px;
+}
+.comparison-chart {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  min-height: 80px;
+}
+.comparison-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+  font-size: 15px;
+  text-align: center;
+}
+.comp-table-wrap { overflow-x: auto; }
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 480px;
+}
+.comp-table th, .comp-table td {
+  padding: 11px 18px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.comp-table th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-alt);
+}
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table tr:hover td { background: var(--bg-alt); }
+.comp-species { font-weight: 600; color: var(--text); }
+.comp-count { color: var(--text-muted); font-size: 13px; }
+.comp-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 140px;
+}
+.comp-bar {
+  height: 8px;
+  border-radius: 100px;
+  min-width: 4px;
+  flex-shrink: 0;
+  transition: width 0.6s ease;
+}
+.comp-bar-label {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ─── RECOMMENDATIONS ───────────────────────── */
+.rec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+.rec-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.rec-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.rec-card__icon { font-size: 36px; }
+.rec-card h3 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.dark-theme .rec-card h3 { color: var(--green-50); }
+.rec-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+.rec-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 100px;
+  margin-top: 4px;
+  align-self: flex-start;
+}
+.rec-badge--ok   { background: rgba(34,197,94,0.15); color: #16a34a; }
+.rec-badge--warn { background: rgba(234,179,8,0.15); color: #ca8a04; }
+.rec-badge--good { background: rgba(132,204,22,0.15); color: #65a30d; }
+
+.rec-dynamic {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+}
+.rec-dynamic__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+.dark-theme .rec-dynamic__title { color: var(--green-50); }
+.rec-dynamic__content { display: flex; flex-direction: column; gap: 12px; }
+.rec-dynamic__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+.rec-dynamic__icon { font-size: 20px; flex-shrink: 0; }
+.rec-dynamic__item strong { color: var(--text); }
+
+/* ─── FORMULA BOX ───────────────────────────── */
+.formula-box {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin: 8px 0 12px;
+}
+.formula {
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-700);
+  margin-bottom: 4px;
+}
+.formula sub { font-size: 11px; }
+.formula-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ─── CHL BADGE IN SCALE ────────────────────── */
+.chl-badge {
+  font-size: 16px;
+  width: 28px;
+  text-align: center;
+}
+
+/* ─── MOBILE ADDITIONS ──────────────────────── */
+@media (max-width: 900px) {
+  .dual-index-row { grid-template-columns: 1fr; }
+  .layer-switcher { gap: 8px; }
+}
+
+@media (max-width: 600px) {
+  .dual-index-row { grid-template-columns: 1fr 1fr; }
+  .index-box--stress { grid-column: span 2; }
+  .rec-grid { grid-template-columns: 1fr; }
+  .layer-btns { gap: 4px; }
+  .layer-btn { padding: 6px 12px; font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .dual-index-row { grid-template-columns: 1fr; }
+  .index-box--stress { grid-column: span 1; }
+}
