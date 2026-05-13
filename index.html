@@ -220,11 +220,17 @@
       <h3 class="result-card__subtitle">Измеренные параметры ФА</h3>
       <div class="table-wrap" id="faTableWrapper">
         <table class="params-table" id="parametersTable">
+          <colgroup>
+            <col class="col-name">
+            <col class="col-val">
+            <col class="col-val">
+            <col class="col-asym">
+          </colgroup>
           <thead>
             <tr>
               <th>Параметр</th>
-              <th>Левая половина</th>
-              <th>Правая половина</th>
+              <th>Лев.</th>
+              <th>Прав.</th>
               <th>Асимметрия</th>
             </tr>
           </thead>
@@ -241,22 +247,79 @@
   <div class="container">
     <div class="section-label">Карта</div>
     <h2 class="section-title">Карта качества среды</h2>
-    <p class="section-desc reveal">Анонимные результаты всех участников. Два независимых слоя: ФА (хроническое) и хлорофилл (актуальное). Новые метки появляются автоматически — синхронизация каждые 30 секунд.</p>
+    <p class="section-desc reveal">Анонимные результаты всех участников. Два независимых слоя: ФА (хроническое) и хлорофилл (актуальное). Синхронизация каждые 30 секунд.</p>
+
+    <!-- Map stat pills -->
+    <div class="map-stats reveal" id="mapStats">
+      <div class="map-stat">
+        <span class="map-stat__icon">📍</span>
+        <span class="map-stat__val" id="statPinsCount">0</span>
+        <span class="map-stat__label">меток</span>
+      </div>
+      <div class="map-stat">
+        <span class="map-stat__icon">🌍</span>
+        <span class="map-stat__val" id="statSpeciesCount">0</span>
+        <span class="map-stat__label">видов</span>
+      </div>
+      <div class="map-stat map-stat--live">
+        <span class="map-stat__pulse"></span>
+        <span class="map-stat__label">Синхронизация</span>
+      </div>
+    </div>
+
     <div class="layer-switcher reveal">
-      <span class="layer-switcher__label">Слои карты:</span>
+      <span class="layer-switcher__label">Слои:</span>
       <div class="layer-btns">
         <button class="layer-btn active" id="layerBtnAll" data-layer="all">🗺 Все</button>
         <button class="layer-btn" id="layerBtnFa" data-layer="fa">📐 Слой ФА</button>
-        <button class="layer-btn" id="layerBtnChl" data-layer="chl">🌿 Слой Хлорофилла</button>
+        <button class="layer-btn" id="layerBtnChl" data-layer="chl">🌿 Хлорофилл</button>
       </div>
       <div class="layer-hint" id="layerHint">Показаны оба индекса</div>
     </div>
-    <div class="map-wrap reveal"><div id="mapContainer"></div><div class="map-legend" id="mapLegend"><div class="legend-title" id="legendTitle">Индекс ФА / Стресс</div><div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>I — Норма</div><div class="legend-item"><span class="legend-dot" style="background:#84cc16"></span>II — Начальные</div><div class="legend-item"><span class="legend-dot" style="background:#eab308"></span>III — Средние</div><div class="legend-item"><span class="legend-dot" style="background:#f97316"></span>IV — Существенные</div><div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>V — Критические</div><div class="legend-divider" id="chlLegendDivider" style="display:none"></div><div class="legend-title legend-title--chl" id="chlLegendTitle" style="display:none">Хлорофилл</div><div class="legend-item" id="chlLeg1" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#1a7a2e"></span>Высокий</div><div class="legend-item" id="chlLeg2" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#a3c94a"></span>Средний</div><div class="legend-item" id="chlLeg3" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#f0c040"></span>Пониженный</div><div class="legend-item" id="chlLeg4" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#e05c2a"></span>Низкий</div></div></div>
+
+    <div class="map-wrap reveal">
+      <div id="mapContainer"></div>
+      <div class="map-legend" id="mapLegend">
+        <div class="legend-title" id="legendTitle">Индекс ФА / Стресс</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>I — Норма</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#84cc16"></span>II — Начальные</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#eab308"></span>III — Средние</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f97316"></span>IV — Существенные</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>V — Критические</div>
+        <div class="legend-divider" id="chlLegendDivider" style="display:none"></div>
+        <div class="legend-title legend-title--chl" id="chlLegendTitle" style="display:none">Хлорофилл</div>
+        <div class="legend-item" id="chlLeg1" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#1a7a2e"></span>Высокий</div>
+        <div class="legend-item" id="chlLeg2" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#a3c94a"></span>Средний</div>
+        <div class="legend-item" id="chlLeg3" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#f0c040"></span>Пониженный</div>
+        <div class="legend-item" id="chlLeg4" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#e05c2a"></span>Низкий</div>
+      </div>
+    </div>
+
     <div class="map-actions">
-      <button class="btn btn--ghost btn--sm" id="loadServerDataBtn">🔄 Обновить</button>
-      <button class="btn btn--ghost btn--sm" id="exportDataBtn">⬇ Экспорт</button>
-      <button class="btn btn--ghost btn--sm" id="importDataBtn">⬆ Импорт</button>
-      <button class="btn btn--danger btn--sm" id="clearMapBtn">🗑 Очистить</button>
+      <button class="map-action-btn" id="loadServerDataBtn">
+        <span class="map-action-btn__icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </span>
+        <span>Обновить</span>
+      </button>
+      <button class="map-action-btn" id="exportDataBtn">
+        <span class="map-action-btn__icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </span>
+        <span>Экспорт</span>
+      </button>
+      <button class="map-action-btn" id="importDataBtn">
+        <span class="map-action-btn__icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </span>
+        <span>Импорт</span>
+      </button>
+      <button class="map-action-btn map-action-btn--clear" id="clearMapBtn">
+        <span class="map-action-btn__icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </span>
+        <span>Очистить локально</span>
+      </button>
     </div>
     <input type="file" id="importFileInput" accept=".json" style="display:none">
   </div>
