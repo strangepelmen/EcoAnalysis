@@ -1,405 +1,582 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" dir="ltr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ЭкоАнализ | Оценка качества среды</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Оценка качества окружающей среды методом флуктуирующей асимметрии листьев и хлорофилльного индекса растений. Научный проект Гимназии №25 г. Минска.">
+    <meta name="theme-color" content="#faf7f2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f1a13" media="(prefers-color-scheme: dark)">
+    <meta name="color-scheme" content="light dark">
+    <meta name="author" content="Гимназия №25 г. Минска">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="ЭкоАнализ — Оценка качества окружающей среды">
+    <meta property="og:description" content="Метод флуктуирующей асимметрии листьев и хлорофилльный индекс растений. Научный проект.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:site_name" content="ЭкоАнализ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="ЭкоАнализ — Оценка качества среды">
+    <meta name="twitter:description" content="Метод флуктуирующей асимметрии и хлорофилльный индекс растений.">
+    <title>ЭкоАнализ | Оценка качества среды</title>
+
+    <!-- Preconnect to external origins -->
+    <link rel="preconnect" href="https://api.jsonbin.io" crossorigin>
+    <link rel="preconnect" href="https://{s}.basemaps.cartocdn.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Fonts -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap"></noscript>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <!-- Leaflet JS (loaded deferred) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Inline SVG Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F33F;</text></svg>">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "ЭкоАнализ",
+        "url": "https://strangepelmen.github.io/EcoAnalysis/",
+        "description": "Оценка качества окружающей среды методом флуктуирующей асимметрии листьев и хлорофилльного индекса растений",
+        "applicationCategory": "ScienceApplication",
+        "operatingSystem": "Any",
+        "author": {
+            "@type": "EducationalOrganization",
+            "name": "ГУО «Гимназия №25 имени Риммы Шершнёвой г. Минска»"
+        },
+        "about": {
+            "@type": "Thing",
+            "name": "Флуктуирующая асимметрия листьев",
+            "description": "Метод оценки качества среды по отклонениям от симметрии листьев растений"
+        }
+    }
+    </script>
+
+    <style>
+        /* Critical inline styles for preloader */
+        #preloader {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: var(--bg, #faf7f2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s;
+            pointer-events: all;
+        }
+        #preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .preloader-leaf {
+            font-size: 48px;
+            animation: preloaderSpin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            filter: drop-shadow(0 2px 8px rgba(34, 197, 94, 0.3));
+        }
+        @keyframes preloaderSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.15); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .preloader-leaf { animation: none; }
+        }
+    </style>
 </head>
 <body>
+    <!-- Preloader -->
+    <div id="preloader" aria-hidden="true">
+        <span class="preloader-leaf" role="img" aria-label="Загрузка...">🍃</span>
+    </div>
 
-<!-- HEADER -->
-<header class="site-header" id="site-header">
-  <div class="header-inner">
-    <a href="#" class="logo">
-      <span class="logo-leaf">🌿</span>
-      <span class="logo-text">ЭкоАнализ</span>
-    </a>
-    <nav class="main-nav" id="main-nav">
-      <a href="#about" class="nav-link">О проекте</a>
-      <a href="#instructions" class="nav-link">Инструкция</a>
-      <a href="#analysis" class="nav-link">Анализ</a>
-      <a href="#map" class="nav-link">Карта</a>
-      <a href="#comparison" class="nav-link">Сравнение</a>
-      <a href="#recommendations" class="nav-link">Рекомендации</a>
-      <a href="#methodology" class="nav-link">Методология</a>
-      <div class="nav-theme-wrap">
-        <label class="theme-toggle" title="Тёмная тема">
-          <input type="checkbox" id="themeToggle">
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        </label>
-      </div>
-    </nav>
-    <div class="header-right-mobile">
-      <label class="theme-toggle theme-toggle--mobile" title="Тёмная тема">
-        <input type="checkbox" id="themeToggleMobile">
-        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-      </label>
-      <button class="burger" id="burger" aria-label="Меню"><span></span><span></span><span></span></button>
-    </div>
-  </div>
-</header>
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
 
-<!-- HERO SECTION -->
-<section class="hero">
-  <div class="hero-orb hero-orb--1"></div>
-  <div class="hero-orb hero-orb--2"></div>
-  <div class="hero-orb hero-orb--3"></div>
-  <div class="hero-orb hero-orb--4"></div>
-  <div class="hero-particles">
-    <span class="particle particle-1">🌿</span>
-    <span class="particle particle-2">🍃</span>
-    <span class="particle particle-3">🌱</span>
-    <span class="particle particle-4">✨</span>
-    <span class="particle particle-5">🍂</span>
-    <span class="particle particle-6">🍀</span>
-  </div>
-  <div class="container hero-container">
-    <div class="hero-content">
-      <div class="hero-badge">
-        <span class="hero-badge-icon">🌍</span>
-        <span>Гимназия №25 г. Минска</span>
-      </div>
-      <h1 class="hero-title">
-        Оценка качества <em>окружающей среды</em>
-      </h1>
-      <p class="hero-sub">
-        Метод флуктуирующей асимметрии листьев<br class="br-desktop">
-        и хлорофилльный индекс растений
-      </p>
-      <div class="hero-actions">
-        <a href="#analysis" class="btn btn--primary btn--hero">
-          <span>Начать анализ</span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-        <a href="#about" class="btn btn--ghost btn--hero">Узнать больше</a>
-      </div>
-    </div>
-  </div>
-</section>
+    <!-- Noise overlay for subtle texture -->
+    <div class="noise-overlay" aria-hidden="true"></div>
 
-<!-- ABOUT SECTION -->
-<section id="about" class="section">
-  <div class="container">
-    <div class="section-label">О проекте</div>
-    <h2 class="section-title">Наука на службе природы</h2>
-    <div class="about-grid">
-      <div class="about-card reveal">
-        <div class="about-card__icon">🔬</div>
-        <h3>Метод ФА</h3>
-        <p>Флуктуирующая асимметрия — небольшие случайные отклонения от идеальной симметрии листа. Показывает <strong>накопленный стресс за сезон</strong>: чем выше асимметрия, тем хуже состояние среды.</p>
-      </div>
-      <div class="about-card reveal delay-1">
-        <div class="about-card__icon">🌱</div>
-        <h3>Хлорофилльный индекс</h3>
-        <p>Расчёт ХлИ по соотношению цветовых каналов фотографии листа. Показывает <strong>актуальное состояние</strong> растения: чем бледнее и желтее лист, тем ниже индекс.</p>
-      </div>
-      <div class="about-card reveal delay-2">
-        <div class="about-card__icon">🌍</div>
-        <h3>Карта нового поколения</h3>
-        <p>Два независимых слоя на карте: слой ФА (хроническое загрязнение) и слой хлорофилла (острое, текущее). Вместе дают полную экологическую картину.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- INSTRUCTIONS SECTION -->
-<section id="instructions" class="section section--alt">
-  <div class="container">
-    <div class="section-label">Инструкция</div>
-    <h2 class="section-title">Как принять участие</h2>
-    <div class="steps">
-      <div class="step reveal">
-        <div class="step__number">01</div>
-        <div class="step__icon">🌳</div>
-        <h3 class="step__title">Найдите растение</h3>
-        <p class="step__text">Подходят <strong>Ива Белая</strong>, <strong>Ива Козья</strong>, <strong>Тополь Бальзамический</strong>, <strong>Берёза</strong> и другие виды на выбор.</p>
-      </div>
-      <div class="step-arrow">→</div>
-      <div class="step reveal delay-1">
-        <div class="step__number">02</div>
-        <div class="step__icon">📸</div>
-        <h3 class="step__title">Сфотографируйте лист</h3>
-        <p class="step__text">На <strong>белом фоне</strong>, при хорошем освещении, чтобы лист был виден полностью. Белый фон используется как эталон освещения.</p>
-      </div>
-      <div class="step-arrow">→</div>
-      <div class="step reveal delay-2">
-        <div class="step__number">03</div>
-        <div class="step__icon">📊</div>
-        <h3 class="step__title">Получите результат</h3>
-        <p class="step__text">Алгоритм рассчитает индекс ФА и хлорофилльный индекс, выдаст итоговый индекс здоровья листа.</p>
-      </div>
-      <div class="step-arrow">→</div>
-      <div class="step reveal delay-3">
-        <div class="step__number">04</div>
-        <div class="step__icon">📍</div>
-        <h3 class="step__title">Добавьте на карту</h3>
-        <p class="step__text">Поделитесь результатом анонимно. Ваша метка с обоими индексами появится у всех пользователей на карте.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ANALYSIS SECTION -->
-<section id="analysis" class="section">
-  <div class="container">
-    <div class="section-label">Анализ</div>
-    <h2 class="section-title">Анализ листа</h2>
-    <div class="plant-picker reveal">
-      <p class="plant-picker__label">1. Выберите вид растения <span class="plant-picker__req">— обязательно перед загрузкой фото</span></p>
-      <div class="plant-select-wrapper">
-        <select id="plantSelect" class="plant-select">
-          <option value="" selected>🌱 Выберите вид растения</option>
-        </select>
-      </div>
-    </div>
-    <div class="calibration-hint reveal">
-      <span class="calibration-hint__icon">💡</span>
-      <span>Фотографируйте лист на <strong>белом фоне</strong> — алгоритм использует его как эталон освещения для точного расчёта хлорофилла.</span>
-    </div>
-    <div class="upload-zone reveal" id="uploadArea">
-      <div class="upload-zone__inner">
-        <div class="upload-zone__icon">📁</div>
-        <p class="upload-zone__title">Перетащите фотографию листа</p>
-        <p class="upload-zone__sub">или выберите файл (рекомендуется белый фон)</p>
-        <button class="btn btn--primary" id="uploadBtn" disabled>Выбрать файл</button>
-        <input type="file" id="fileInput" accept="image/*" style="display:none">
-      </div>
-    </div>
-    <div class="preview-box hidden" id="imagePreviewContainer">
-      <div class="preview-box__img-wrap">
-        <img id="imagePreview" class="preview-box__img" alt="Preview">
-        <canvas id="analysisCanvas" style="display:none"></canvas>
-      </div>
-      <div class="preview-box__actions">
-        <button class="btn btn--primary" id="analyzeBtn">🔬 Проанализировать</button>
-        <button class="btn btn--ghost" id="changeImgBtn">Изменить фото</button>
-      </div>
-    </div>
-    <div class="analysis-progress hidden" id="analysisVisualization">
-      <div class="analysis-anim"><div class="leaf-spinner">🌿</div><p class="analysis-anim__text" id="analysisAnimText">Анализируем лист…</p></div>
-      <div class="progress-steps">
-        <div class="progress-step" id="step1"><span class="ps-dot"></span><span class="ps-label">Сегментация листа</span></div>
-        <div class="progress-step" id="step2"><span class="ps-dot"></span><span class="ps-label">Ось симметрии</span></div>
-        <div class="progress-step" id="step3"><span class="ps-dot"></span><span class="ps-label">Расчёт ФА</span></div>
-        <div class="progress-step" id="step4"><span class="ps-dot"></span><span class="ps-label">Калибровка освещения</span></div>
-        <div class="progress-step" id="step5"><span class="ps-dot"></span><span class="ps-label">Хлорофилльный индекс</span></div>
-        <div class="progress-step" id="step6"><span class="ps-dot"></span><span class="ps-label">Итоговый индекс здоровья</span></div>
-      </div>
-    </div>
-    <div class="result-card hidden" id="resultContainer">
-      <div class="result-card__score" id="qualityResult"></div>
-      <div class="dual-index-row">
-        <div class="index-box index-box--fa">
-          <div class="index-box__icon">📐</div>
-          <div class="index-box__label">Индекс ФА<br><span class="index-box__sub">накопленный стресс</span></div>
-          <div class="index-box__value" id="faIndexDisplay">—</div>
-          <div class="index-box__bar-wrap"><div class="index-box__bar" id="faBar"></div></div>
-          <div class="index-box__interp" id="faInterp"></div>
+    <!-- Header -->
+    <header class="site-header" id="site-header" role="banner">
+        <div class="header-inner">
+            <a href="#" class="logo" aria-label="ЭкоАнализ — на главную">
+                <span class="logo-leaf" aria-hidden="true">🍃</span>
+                <span class="logo-text">ЭкоАнализ</span>
+            </a>
+            <nav class="main-nav" id="main-nav" role="navigation" aria-label="Основная навигация">
+                <a href="#about" class="nav-link">О проекте</a>
+                <a href="#instructions" class="nav-link">Инструкция</a>
+                <a href="#analysis" class="nav-link">Анализ</a>
+                <a href="#map" class="nav-link">Карта</a>
+                <a href="#comparison" class="nav-link">Сравнение</a>
+                <a href="#recommendations" class="nav-link">Рекомендации</a>
+                <a href="#methodology" class="nav-link">Методология</a>
+                <div class="nav-theme-wrap">
+                    <label class="theme-toggle" title="Переключить тему" aria-label="Переключить тёмную/светлую тему">
+                        <input type="checkbox" id="themeToggle" aria-label="Тёмная тема">
+                        <span class="toggle-thumb" aria-hidden="true"></span>
+                    </label>
+                </div>
+            </nav>
+            <div class="header-right-mobile">
+                <label class="theme-toggle" title="Переключить тему" aria-label="Переключить тёмную/светлую тему">
+                    <input type="checkbox" id="themeToggleMobile" aria-label="Тёмная тема">
+                    <span class="toggle-thumb" aria-hidden="true"></span>
+                </label>
+                <button class="burger" id="burger" aria-label="Меню" aria-expanded="false" aria-controls="main-nav">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
         </div>
-        <div class="index-box index-box--chl">
-          <div class="index-box__icon">🌿</div>
-          <div class="index-box__label">Хлорофилльный индекс<br><span class="index-box__sub">актуальное состояние</span></div>
-          <div class="index-box__value" id="chlIndexDisplay">—</div>
-          <div class="index-box__bar-wrap"><div class="index-box__bar" id="chlBar"></div></div>
-          <div class="index-box__interp" id="chlInterp"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="hero-orb hero-orb--1" aria-hidden="true"></div>
+            <div class="hero-orb hero-orb--2" aria-hidden="true"></div>
+            <div class="hero-orb hero-orb--3" aria-hidden="true"></div>
+            <div class="hero-orb hero-orb--4" aria-hidden="true"></div>
+            <div class="hero-particles" aria-hidden="true">
+                <span class="particle particle-1">🌿</span>
+                <span class="particle particle-2">🍂</span>
+                <span class="particle particle-3">🌱</span>
+                <span class="particle particle-4">🍃</span>
+                <span class="particle particle-5">🌳</span>
+                <span class="particle particle-6">✨</span>
+            </div>
+            <div class="hero-container">
+                <div class="hero-content">
+                    <div class="hero-badge" aria-hidden="true">✨ Гимназия №25 г. Минска</div>
+                    <h1 class="hero-title" id="hero-title">
+                        <em>Оценка качества</em><br>окружающей среды
+                    </h1>
+                    <p class="hero-sub">
+                        Метод флуктуирующей асимметрии листьев <br class="hero-sub__br">
+                        и хлорофилльный индекс растений
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#analysis" class="btn btn--primary btn--hero">
+                            <span aria-hidden="true">🔬</span> Начать анализ
+                        </a>
+                        <a href="#about" class="btn btn--ghost btn--hero">
+                            <span aria-hidden="true">📖</span> Узнать больше
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="section" id="about" aria-labelledby="about-title">
+            <div class="container">
+                <div class="section-label reveal">О проекте</div>
+                <h2 class="section-title reveal" id="about-title">Наука на службе природы</h2>
+                <div class="about-grid">
+                    <article class="about-card reveal" tabindex="0">
+                        <div class="about-card__icon" aria-hidden="true">📐</div>
+                        <h3>Метод ФА</h3>
+                        <p>Флуктуирующая асимметрия — небольшие случайные отклонения от идеальной симметрии листа. Показывает накопленный стресс за сезон: чем выше асимметрия, тем хуже состояние среды.</p>
+                    </article>
+                    <article class="about-card reveal" tabindex="0">
+                        <div class="about-card__icon" aria-hidden="true">🌿</div>
+                        <h3>Хлорофилльный индекс</h3>
+                        <p>Расчёт ХлИ по соотношению цветовых каналов фотографии листа. Показывает актуальное состояние растения: чем бледнее и желтее лист, тем ниже индекс.</p>
+                    </article>
+                    <article class="about-card reveal" tabindex="0">
+                        <div class="about-card__icon" aria-hidden="true">🗺️</div>
+                        <h3>Карта нового поколения</h3>
+                        <p>Два независимых слоя на карте: слой ФА (хроническое загрязнение) и слой хлорофилла (острое, текущее). Вместе дают полную экологическую картину.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Instructions Section -->
+        <section class="section section--alt" id="instructions" aria-labelledby="instructions-title">
+            <div class="container">
+                <div class="section-label reveal">Инструкция</div>
+                <h2 class="section-title reveal" id="instructions-title">Как принять участие</h2>
+                <div class="steps">
+                    <div class="step reveal" tabindex="0">
+                        <span class="step__number">01</span>
+                        <div class="step__icon" aria-hidden="true">🔍</div>
+                        <h3 class="step__title">Найдите растение</h3>
+                        <p class="step__text">Подходят Ива Белая, Ива Козья, Тополь Бальзамический, Берёза и другие виды на выбор.</p>
+                    </div>
+                    <span class="step-arrow" aria-hidden="true">→</span>
+                    <div class="step reveal" tabindex="0">
+                        <span class="step__number">02</span>
+                        <div class="step__icon" aria-hidden="true">📸</div>
+                        <h3 class="step__title">Сфотографируйте лист</h3>
+                        <p class="step__text">На белом фоне, при хорошем освещении, чтобы лист был виден полностью. Белый фон используется как эталон освещения.</p>
+                    </div>
+                    <span class="step-arrow" aria-hidden="true">→</span>
+                    <div class="step reveal" tabindex="0">
+                        <span class="step__number">03</span>
+                        <div class="step__icon" aria-hidden="true">🧪</div>
+                        <h3 class="step__title">Получите результат</h3>
+                        <p class="step__text">Алгоритм рассчитает индекс ФА и хлорофилльный индекс, выдаст итоговый индекс здоровья листа.</p>
+                    </div>
+                    <span class="step-arrow" aria-hidden="true">→</span>
+                    <div class="step reveal" tabindex="0">
+                        <span class="step__number">04</span>
+                        <div class="step__icon" aria-hidden="true">📍</div>
+                        <h3 class="step__title">Добавьте на карту</h3>
+                        <p class="step__text">Поделитесь результатом анонимно. Ваша метка с обоими индексами появится у всех пользователей на карте.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analysis Section -->
+        <section class="section" id="analysis" aria-labelledby="analysis-title">
+            <div class="container">
+                <div class="section-label reveal">Анализ</div>
+                <h2 class="section-title reveal" id="analysis-title">Анализ листа</h2>
+
+                <div class="plant-picker reveal">
+                    <label for="plantSelect" class="plant-picker__label">
+                        1. Выберите вид растения
+                        <span class="plant-picker__req"> — обязательно перед загрузкой фото</span>
+                    </label>
+                    <div class="plant-select-wrapper">
+                        <select id="plantSelect" class="plant-select" required aria-required="true">
+                            <option value="">Выберите вид растения</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="calibration-hint reveal" role="note">
+                    <span class="calibration-hint__icon" aria-hidden="true">💡</span>
+                    <span>Фотографируйте лист на <strong>белом фоне</strong> — алгоритм использует его как эталон освещения для точного расчёта хлорофилла.</span>
+                </div>
+
+                <div class="upload-zone reveal" id="uploadZone" role="button" tabindex="0" aria-label="Загрузить фотографию листа">
+                    <div class="upload-zone__inner">
+                        <div class="upload-zone__icon" aria-hidden="true">📤</div>
+                        <div class="upload-zone__title">Перетащите фотографию листа</div>
+                        <div class="upload-zone__sub">или выберите файл (рекомендуется белый фон)</div>
+                        <label class="btn btn--primary btn--sm" for="fileInput" role="button">Выбрать файл</label>
+                        <input type="file" id="fileInput" class="hidden" accept="image/*" aria-label="Выбрать файл изображения">
+                    </div>
+                </div>
+
+                <div class="preview-box hidden" id="previewBox">
+                    <div class="preview-box__img-wrap">
+                        <img id="previewImage" class="preview-box__img" alt="Предпросмотр загруженного листа">
+                    </div>
+                    <div class="preview-box__actions">
+                        <button class="btn btn--primary" id="analyzeBtn" aria-label="Проанализировать изображение">🔬 Проанализировать</button>
+                        <button class="btn btn--ghost" id="changePhotoBtn" aria-label="Изменить фотографию">📷 Изменить фото</button>
+                    </div>
+                </div>
+
+                <div class="analysis-progress hidden" id="analysisProgress" aria-live="polite" aria-label="Прогресс анализа">
+                    <div class="analysis-anim">
+                        <span class="leaf-spinner" aria-hidden="true">🍃</span>
+                        <p class="analysis-anim__text">Анализируем лист…</p>
+                    </div>
+                    <div class="progress-steps">
+                        <span class="progress-step" data-step="1"><span class="ps-dot" aria-hidden="true"></span> Сегментация листа</span>
+                        <span class="progress-step" data-step="2"><span class="ps-dot" aria-hidden="true"></span> Ось симметрии</span>
+                        <span class="progress-step" data-step="3"><span class="ps-dot" aria-hidden="true"></span> Расчёт ФА</span>
+                        <span class="progress-step" data-step="4"><span class="ps-dot" aria-hidden="true"></span> Калибровка освещения</span>
+                        <span class="progress-step" data-step="5"><span class="ps-dot" aria-hidden="true"></span> Хлорофилльный индекс</span>
+                        <span class="progress-step" data-step="6"><span class="ps-dot" aria-hidden="true"></span> Итоговый индекс здоровья</span>
+                    </div>
+                </div>
+
+                <div class="result-card hidden" id="resultCard" aria-live="polite">
+                    <div class="result-card__score quality-1" id="resultScore">
+                        <span id="resultQualityEmoji" aria-hidden="true">🟢</span>
+                        <span id="resultQualityLabel">I — Норма</span>
+                    </div>
+                    <div class="dual-index-row">
+                        <div class="index-box index-box--fa">
+                            <span class="index-box__icon" aria-hidden="true">📐</span>
+                            <span class="index-box__label">Индекс ФА</span>
+                            <span class="index-box__sub">накопленный стресс</span>
+                            <span class="index-box__value" id="faValue">—</span>
+                            <div class="index-box__bar-wrap"><div class="index-box__bar" id="faBar" style="width:0%;background:#22c55e"></div></div>
+                            <span class="index-box__interp" id="faInterp" style="color:#22c55e">—</span>
+                        </div>
+                        <div class="index-box index-box--chl">
+                            <span class="index-box__icon" aria-hidden="true">🌿</span>
+                            <span class="index-box__label">Хлорофилльный индекс</span>
+                            <span class="index-box__sub">актуальное состояние</span>
+                            <span class="index-box__value" id="chlValue">—</span>
+                            <div class="index-box__bar-wrap"><div class="index-box__bar" id="chlBar" style="width:0%;background:#1a7a2e"></div></div>
+                            <span class="index-box__interp" id="chlInterp" style="color:#1a7a2e">—</span>
+                        </div>
+                        <div class="index-box index-box--stress">
+                            <span class="index-box__icon" aria-hidden="true">⚠️</span>
+                            <span class="index-box__label">Индекс стресса</span>
+                            <span class="index-box__sub">итоговый показатель</span>
+                            <span class="index-box__value" id="stressValue">—</span>
+                            <div class="index-box__bar-wrap"><div class="index-box__bar" id="stressBar" style="width:0%;background:#f97316"></div></div>
+                            <span class="index-box__interp" id="stressInterp" style="color:#f97316">—</span>
+                        </div>
+                    </div>
+                    <div class="diagnosis-block" id="diagnosisBlock">
+                        <span class="diag-icon" id="diagnosisIcon" aria-hidden="true"></span>
+                        <span id="diagnosisText"></span>
+                    </div>
+                    <div class="result-card__subtitle">Измеренные параметры ФА</div>
+                    <div class="table-wrap">
+                        <table class="params-table" aria-label="Параметры флуктуирующей асимметрии">
+                            <colgroup>
+                                <col class="col-name">
+                                <col class="col-val">
+                                <col class="col-val">
+                                <col class="col-asym">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Параметр</th>
+                                    <th scope="col">Лев.</th>
+                                    <th scope="col">Прав.</th>
+                                    <th scope="col">Асимметрия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paramsTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="result-card__map-section">
+                        <p>Поделитесь результатом анонимно — ваша метка с двумя индексами появится у всех участников на карте.</p>
+                        <button class="btn btn--primary btn--wide" id="addToMapBtn" aria-label="Добавить результат на карту">📍 Добавить на карту</button>
+                    </div>
+                </div>
+
+                <canvas id="analysisCanvas" class="hidden" aria-hidden="true"></canvas>
+            </div>
+        </section>
+
+        <!-- Map Section -->
+        <section class="section section--alt" id="map" aria-labelledby="map-title">
+            <div class="container">
+                <div class="section-label reveal">Карта</div>
+                <h2 class="section-title reveal" id="map-title">Карта качества среды</h2>
+                <p class="section-desc reveal">Анонимные результаты всех участников. Два независимых слоя: ФА (хроническое) и хлорофилл (актуальное). Синхронизация каждые 30 секунд.</p>
+
+                <div class="map-stats reveal">
+                    <div class="map-stat">
+                        <span class="map-stat__icon" aria-hidden="true">📍</span>
+                        <span class="map-stat__val" id="statPinsCount">0</span> меток
+                    </div>
+                    <div class="map-stat">
+                        <span class="map-stat__icon" aria-hidden="true">🌳</span>
+                        <span class="map-stat__val" id="statSpeciesCount">0</span> видов
+                    </div>
+                    <div class="map-stat map-stat--live" title="Автосинхронизация активна">
+                        <span class="map-stat__pulse" aria-hidden="true"></span> Синхронизация
+                    </div>
+                </div>
+
+                <div class="map-wrap reveal">
+                    <div id="mapContainer" aria-label="Интерактивная карта качества среды" role="application"></div>
+                    <div class="map-legend" id="mapLegend" aria-label="Легенда карты">
+                        <div class="legend-title" id="legendTitle">Индекс ФА / Стресс</div>
+                        <div class="legend-item"><span class="legend-dot" style="background:#22c55e" aria-hidden="true"></span> I — Норма</div>
+                        <div class="legend-item"><span class="legend-dot" style="background:#84cc16" aria-hidden="true"></span> II — Начальные</div>
+                        <div class="legend-item"><span class="legend-dot" style="background:#eab308" aria-hidden="true"></span> III — Средние</div>
+                        <div class="legend-item"><span class="legend-dot" style="background:#f97316" aria-hidden="true"></span> IV — Существенные</div>
+                        <div class="legend-item"><span class="legend-dot" style="background:#ef4444" aria-hidden="true"></span> V — Критические</div>
+                        <div class="legend-divider" id="chlLegendDivider" aria-hidden="true"></div>
+                        <div class="legend-title legend-title--chl" id="chlLegendTitle">Хлорофилл</div>
+                        <div class="legend-item" id="chlLeg1"><span class="legend-dot legend-dot--chl" style="background:#1a7a2e" aria-hidden="true"></span> Высокий</div>
+                        <div class="legend-item" id="chlLeg2"><span class="legend-dot legend-dot--chl" style="background:#a3c94a" aria-hidden="true"></span> Средний</div>
+                        <div class="legend-item" id="chlLeg3"><span class="legend-dot legend-dot--chl" style="background:#f0c040" aria-hidden="true"></span> Пониженный</div>
+                        <div class="legend-item" id="chlLeg4"><span class="legend-dot legend-dot--chl" style="background:#e05c2a" aria-hidden="true"></span> Низкий</div>
+                    </div>
+                </div>
+
+                <div class="layer-controls reveal" role="radiogroup" aria-label="Выбор слоя карты">
+                    <span style="font-size:13px;font-weight:600;color:var(--text-muted);margin-right:6px;">Слои:</span>
+                    <button class="layer-btn active" data-layer="all" role="radio" aria-checked="true">Все</button>
+                    <button class="layer-btn" data-layer="fa" role="radio" aria-checked="false">Слой ФА</button>
+                    <button class="layer-btn" data-layer="chl" role="radio" aria-checked="false">Хлорофилл</button>
+                    <span class="layer-hint" id="layerHint" style="font-size:12px;color:var(--text-muted);margin-left:8px;">Показаны оба индекса</span>
+                </div>
+
+                <div class="map-actions reveal">
+                    <button class="map-action-btn" id="refreshMapBtn" aria-label="Обновить данные карты">
+                        <span class="map-action-btn__icon" aria-hidden="true">🔄</span> <span>Обновить</span>
+                    </button>
+                    <button class="map-action-btn" id="exportMapBtn" aria-label="Экспортировать данные">
+                        <span class="map-action-btn__icon" aria-hidden="true">📥</span> <span>Экспорт</span>
+                    </button>
+                    <button class="map-action-btn" id="importMapBtn" aria-label="Импортировать данные">
+                        <span class="map-action-btn__icon" aria-hidden="true">📤</span> <span>Импорт</span>
+                    </button>
+                    <button class="map-action-btn map-action-btn--clear" id="clearLocalBtn" aria-label="Очистить локальные данные">
+                        <span class="map-action-btn__icon" aria-hidden="true">🗑️</span> <span>Очистить локально</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Section -->
+        <section class="section" id="comparison" aria-labelledby="comparison-title">
+            <div class="container">
+                <div class="section-label reveal">Сравнение</div>
+                <h2 class="section-title reveal" id="comparison-title">Устойчивость видов</h2>
+                <p class="section-desc reveal">Сравнение среднего индекса стресса для разных видов растений по данным всех участников.</p>
+                <div id="comparisonChart" class="comparison-chart reveal" aria-live="polite">
+                    <div class="comparison-empty">
+                        <span aria-hidden="true" style="font-size:48px;">📊</span>
+                        <p>Данных пока нет — добавьте результаты анализа на карту</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommendations Section -->
+        <section class="section section--alt" id="recommendations" aria-labelledby="recommendations-title">
+            <div class="container">
+                <div class="section-label reveal">Рекомендации</div>
+                <h2 class="section-title reveal" id="recommendations-title">Рекомендации по озеленению</h2>
+                <p class="section-desc reveal">На основе данных карты — какие виды лучше всего подходят для посадки в вашем районе.</p>
+
+                <div class="about-grid">
+                    <article class="about-card reveal" tabindex="0">
+                        <h3>🌆 Для загрязнённых районов</h3>
+                        <p>Рекомендуются газоустойчивые виды: Тополь Бальзамический и Ива Белая. Они обладают высокой толерантностью к промышленным выбросам.</p>
+                        <span class="rec-badge rec-badge--resistant">Устойчивые</span>
+                    </article>
+                    <article class="about-card reveal" tabindex="0">
+                        <h3>🏡 Для умеренно чистых районов</h3>
+                        <p>Берёза Повислая и Липа Мелколистная — хорошие биоиндикаторы. Чувствительны к загрязнению, помогут отслеживать изменения среды.</p>
+                        <span class="rec-badge rec-badge--indicator">Индикаторные</span>
+                    </article>
+                    <article class="about-card reveal" tabindex="0">
+                        <h3>🌲 Для чистых районов</h3>
+                        <p>Клён Остролистный создаёт густую крону и максимально поглощает пыль, но требует чистого воздуха для хорошего роста и развития.</p>
+                        <span class="rec-badge rec-badge--sensitive">Чувствительные</span>
+                    </article>
+                </div>
+
+                <div class="dynamic-recs hidden" id="recDynamic" style="margin-top:32px;">
+                    <h3 style="font-family:var(--font-display);font-size:20px;margin-bottom:16px;">✨ Рекомендации на основе ваших данных</h3>
+                    <div id="recDynamicContent" class="dynamic-recs__content"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Methodology Section -->
+        <section class="section" id="methodology" aria-labelledby="methodology-title">
+            <div class="container">
+                <div class="section-label reveal">Методология</div>
+                <h2 class="section-title reveal" id="methodology-title">Научная основа</h2>
+                <p class="section-desc reveal">Метод флуктуирующей асимметрии разработан В.М. Захаровым и основан на измерении небольших случайных отклонений от билатеральной симметрии у организмов.</p>
+
+                <div class="about-grid">
+                    <article class="about-card reveal" tabindex="0">
+                        <h3>Параметры ФА</h3>
+                        <ol style="padding-left:20px;color:var(--text-muted);font-size:14px;line-height:2;">
+                            <li>Ширина левой и правой половинок листа</li>
+                            <li>Длина второй жилки второго порядка</li>
+                            <li>Расстояние между основаниями 1-й и 2-й жилок второго порядка</li>
+                            <li>Расстояние между концами 1-й и 2-й жилок второго порядка</li>
+                            <li>Угол между главной жилкой и 2-й жилкой второго порядка</li>
+                        </ol>
+                    </article>
+                    <article class="about-card reveal" tabindex="0">
+                        <h3>Хлорофилльный индекс (ХлИ)</h3>
+                        <p>Рассчитывается по цветовым каналам фотографии с калибровкой по белому фону:</p>
+                        <p style="font-family:'Courier New',monospace;font-size:15px;font-weight:600;color:var(--green-700);margin:12px 0;">ХлИ = (G − R) / (G + R)</p>
+                        <p>аналог NDVI для фотографий (диапазон: −1 … +1)</p>
+                        <p style="margin-top:12px;"><strong>Итоговый индекс стресса:</strong></p>
+                        <p style="font-family:'Courier New',monospace;font-size:14px;font-weight:600;color:var(--green-700);">Stress = (ФА<sub>норм</sub> + (1 − ХлИ<sub>норм</sub>)) / 2</p>
+                        <p style="font-size:13px;color:var(--text-muted);">0 = полное здоровье, 1 = критический стресс</p>
+                    </article>
+                    <article class="about-card reveal" tabindex="0">
+                        <h3>Оценочная шкала ФА</h3>
+                        <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px;" aria-label="Шкала оценки ФА">
+                            <tbody>
+                                <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 0;"><strong>I</strong> Условно нормальное</td><td style="text-align:right;">&lt; 0.040</td></tr>
+                                <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 0;"><strong>II</strong> Начальные отклонения</td><td style="text-align:right;">0.040–0.044</td></tr>
+                                <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 0;"><strong>III</strong> Средний уровень</td><td style="text-align:right;">0.045–0.049</td></tr>
+                                <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 0;"><strong>IV</strong> Существенные отклонения</td><td style="text-align:right;">0.050–0.054</td></tr>
+                                <tr><td style="padding:8px 0;"><strong>V</strong> Критическое состояние</td><td style="text-align:right;">&gt; 0.054</td></tr>
+                            </tbody>
+                        </table>
+                        <h4 style="margin-top:16px;font-size:14px;">Хлорофилльный индекс</h4>
+                        <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px;" aria-label="Шкала хлорофилльного индекса">
+                            <tbody>
+                                <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 0;">🟢 Высокий</td><td style="text-align:right;">&gt; 0.15</td></tr>
+                                <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 0;">🟡 Средний</td><td style="text-align:right;">0.05–0.15</td></tr>
+                                <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 0;">🟠 Пониженный</td><td style="text-align:right;">−0.05–0.05</td></tr>
+                                <tr><td style="padding:8px 0;">🔴 Низкий (стресс)</td><td style="text-align:right;">&lt; −0.05</td></tr>
+                            </tbody>
+                        </table>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer" role="contentinfo">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <span style="font-size:28px;" aria-hidden="true">🍃</span>
+                    <strong style="font-family:var(--font-display);font-size:18px;">ЭкоАнализ</strong>
+                    <p style="font-size:14px;opacity:0.85;max-width:280px;">Оценка качества окружающей среды методом флуктуирующей асимметрии и хлорофилльного индекса листьев растений.</p>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Контакты</h4>
+                    <p style="font-size:14px;opacity:0.85;">ГУО «Гимназия №25 имени Риммы Шершнёвой г. Минска»</p>
+                    <p style="font-size:13px;opacity:0.7;">Научный руководитель:<br>Корнеенко Ольга Сергеевна</p>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Навигация</h4>
+                    <nav aria-label="Навигация в подвале">
+                        <a href="#about" class="footer-link">О проекте</a>
+                        <a href="#instructions" class="footer-link">Инструкция</a>
+                        <a href="#analysis" class="footer-link">Анализ</a>
+                        <a href="#map" class="footer-link">Карта</a>
+                        <a href="#comparison" class="footer-link">Сравнение</a>
+                        <a href="#recommendations" class="footer-link">Рекомендации</a>
+                        <a href="#methodology" class="footer-link">Методология</a>
+                    </nav>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 Проект «Оценка качества среды методом флуктуирующей асимметрии»</p>
+            </div>
         </div>
-        <div class="index-box index-box--stress">
-          <div class="index-box__icon">💥</div>
-          <div class="index-box__label">Индекс стресса<br><span class="index-box__sub">итоговый показатель</span></div>
-          <div class="index-box__value" id="stressIndexDisplay">—</div>
-          <div class="index-box__bar-wrap"><div class="index-box__bar" id="stressBar"></div></div>
-          <div class="index-box__interp" id="stressInterp"></div>
+    </footer>
+
+    <!-- Hidden file import input -->
+    <input type="file" id="importFileInput" class="hidden" accept=".json" aria-label="Импортировать данные из файла">
+
+    <!-- Main Script -->
+    <script src="script.js" defer></script>
+
+    <!-- Noscript fallback -->
+    <noscript>
+        <div style="text-align:center;padding:40px;font-family:sans-serif;">
+            <p>⚠️ Для работы сайта требуется JavaScript. Пожалуйста, включите его в настройках браузера.</p>
         </div>
-      </div>
-      <div class="diagnosis-block" id="diagnosisBlock"></div>
-      <h3 class="result-card__subtitle">Измеренные параметры ФА</h3>
-      <div class="table-wrap" id="faTableWrapper">
-        <table class="params-table" id="parametersTable">
-          <colgroup>
-            <col class="col-name">
-            <col class="col-val">
-            <col class="col-val">
-            <col class="col-asym">
-          </colgroup>
-          <thead>
-            <tr>
-              <th>Параметр</th>
-              <th>Лев.</th>
-              <th>Прав.</th>
-              <th>Асимметрия</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="result-card__map-section"><p>Поделитесь результатом анонимно — ваша метка с двумя индексами появится у всех участников на карте.</p><button class="btn btn--primary btn--wide" id="addToMapBtn">📍 Добавить на карту</button></div>
-    </div>
-  </div>
-</section>
-
-<!-- MAP SECTION -->
-<section id="map" class="section section--alt">
-  <div class="container">
-    <div class="section-label">Карта</div>
-    <h2 class="section-title">Карта качества среды</h2>
-    <p class="section-desc reveal">Анонимные результаты всех участников. Два независимых слоя: ФА (хроническое) и хлорофилл (актуальное). Синхронизация каждые 30 секунд.</p>
-
-    <!-- Map stat pills -->
-    <div class="map-stats reveal" id="mapStats">
-      <div class="map-stat">
-        <span class="map-stat__icon">📍</span>
-        <span class="map-stat__val" id="statPinsCount">0</span>
-        <span class="map-stat__label">меток</span>
-      </div>
-      <div class="map-stat">
-        <span class="map-stat__icon">🌍</span>
-        <span class="map-stat__val" id="statSpeciesCount">0</span>
-        <span class="map-stat__label">видов</span>
-      </div>
-      <div class="map-stat map-stat--live">
-        <span class="map-stat__pulse"></span>
-        <span class="map-stat__label">Синхронизация</span>
-      </div>
-    </div>
-
-    <div class="layer-switcher reveal">
-      <span class="layer-switcher__label">Слои:</span>
-      <div class="layer-btns">
-        <button class="layer-btn active" id="layerBtnAll" data-layer="all">🗺 Все</button>
-        <button class="layer-btn" id="layerBtnFa" data-layer="fa">📐 Слой ФА</button>
-        <button class="layer-btn" id="layerBtnChl" data-layer="chl">🌿 Хлорофилл</button>
-      </div>
-      <div class="layer-hint" id="layerHint">Показаны оба индекса</div>
-    </div>
-
-    <div class="map-wrap reveal">
-      <div id="mapContainer"></div>
-      <div class="map-legend" id="mapLegend">
-        <div class="legend-title" id="legendTitle">Индекс ФА / Стресс</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>I — Норма</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#84cc16"></span>II — Начальные</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#eab308"></span>III — Средние</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#f97316"></span>IV — Существенные</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>V — Критические</div>
-        <div class="legend-divider" id="chlLegendDivider" style="display:none"></div>
-        <div class="legend-title legend-title--chl" id="chlLegendTitle" style="display:none">Хлорофилл</div>
-        <div class="legend-item" id="chlLeg1" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#1a7a2e"></span>Высокий</div>
-        <div class="legend-item" id="chlLeg2" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#a3c94a"></span>Средний</div>
-        <div class="legend-item" id="chlLeg3" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#f0c040"></span>Пониженный</div>
-        <div class="legend-item" id="chlLeg4" style="display:none"><span class="legend-dot legend-dot--chl" style="background:#e05c2a"></span>Низкий</div>
-      </div>
-    </div>
-
-    <div class="map-actions">
-      <button class="map-action-btn" id="loadServerDataBtn">
-        <span class="map-action-btn__icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        </span>
-        <span>Обновить</span>
-      </button>
-      <button class="map-action-btn" id="exportDataBtn">
-        <span class="map-action-btn__icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </span>
-        <span>Экспорт</span>
-      </button>
-      <button class="map-action-btn" id="importDataBtn">
-        <span class="map-action-btn__icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </span>
-        <span>Импорт</span>
-      </button>
-      <button class="map-action-btn map-action-btn--clear" id="clearMapBtn">
-        <span class="map-action-btn__icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        </span>
-        <span>Очистить локально</span>
-      </button>
-    </div>
-    <input type="file" id="importFileInput" accept=".json" style="display:none">
-  </div>
-</section>
-
-<!-- COMPARISON SECTION -->
-<section id="comparison" class="section">
-  <div class="container">
-    <div class="section-label">Сравнение</div>
-    <h2 class="section-title">Устойчивость видов</h2>
-    <p class="section-desc reveal">Сравнение среднего индекса стресса для разных видов растений по данным всех участников.</p>
-    <div class="comparison-wrap reveal"><div id="comparisonChart" class="comparison-chart"><div class="comparison-empty">Данных пока нет — добавьте результаты анализа на карту</div></div></div>
-  </div>
-</section>
-
-<!-- RECOMMENDATIONS SECTION -->
-<section id="recommendations" class="section section--alt">
-  <div class="container">
-    <div class="section-label">Рекомендации</div>
-    <h2 class="section-title">Рекомендации по озеленению</h2>
-    <p class="section-desc reveal">На основе данных карты — какие виды лучше всего подходят для посадки в вашем районе.</p>
-    <div class="rec-grid" id="recGrid">
-      <div class="rec-card reveal"><div class="rec-card__icon">🌳</div><h3>Для загрязнённых районов</h3><p>Рекомендуются газоустойчивые виды: <strong>Тополь Бальзамический</strong> и <strong>Ива Белая</strong>. Они обладают высокой толерантностью к промышленным выбросам.</p><div class="rec-badge rec-badge--ok">Устойчивые</div></div>
-      <div class="rec-card reveal delay-1"><div class="rec-card__icon">🍃</div><h3>Для умеренно чистых районов</h3><p><strong>Берёза Повислая</strong> и <strong>Липа Мелколистная</strong> — хорошие биоиндикаторы. Чувствительны к загрязнению, помогут отслеживать изменения среды.</p><div class="rec-badge rec-badge--warn">Индикаторные</div></div>
-      <div class="rec-card reveal delay-2"><div class="rec-card__icon">🌱</div><h3>Для чистых районов</h3><p><strong>Клён Остролистный</strong> создаёт густую крону и максимально поглощает пыль, но требует чистого воздуха для хорошего роста и развития.</p><div class="rec-badge rec-badge--good">Чувствительные</div></div>
-    </div>
-    <div class="rec-dynamic hidden" id="recDynamic"><h3 class="rec-dynamic__title">📍 Рекомендации на основе ваших данных</h3><div class="rec-dynamic__content" id="recDynamicContent"></div></div>
-  </div>
-</section>
-
-<!-- METHODOLOGY SECTION -->
-<section id="methodology" class="section">
-  <div class="container">
-    <div class="section-label">Методология</div>
-    <h2 class="section-title">Научная основа</h2>
-    <div class="method-grid">
-      <div class="method-text reveal">
-        <p>Метод флуктуирующей асимметрии разработан <strong>В.М. Захаровым</strong> и основан на измерении небольших случайных отклонений от билатеральной симметрии у организмов.</p>
-        <h3>Параметры ФА</h3>
-        <ol class="method-list"><li>Ширина левой и правой половинок листа</li><li>Длина второй жилки второго порядка</li><li>Расстояние между основаниями 1-й и 2-й жилок второго порядка</li><li>Расстояние между концами 1-й и 2-й жилок второго порядка</li><li>Угол между главной жилкой и 2-й жилкой второго порядка</li></ol>
-        <h3 style="margin-top:20px">Хлорофилльный индекс (ХлИ)</h3>
-        <p>Рассчитывается по цветовым каналам фотографии с калибровкой по белому фону:</p>
-        <div class="formula-box"><div class="formula">ХлИ = (G − R) / (G + R)</div><div class="formula-sub">аналог NDVI для фотографий (диапазон: −1 … +1)</div></div>
-        <p style="margin-top:12px">Итоговый индекс стресса:</p>
-        <div class="formula-box"><div class="formula">Stress = (ФА<sub>норм</sub> + (1 − ХлИ<sub>норм</sub>)) / 2</div><div class="formula-sub">0 = полное здоровье, 1 = критический стресс</div></div>
-      </div>
-      <div class="method-scale reveal delay-1">
-        <h3>Оценочная шкала ФА</h3>
-        <div class="scale-rows">
-          <div class="scale-row scale-row--1"><span class="scale-badge">I</span><span class="scale-desc">Условно нормальное</span><span class="scale-val">&lt; 0.040</span></div>
-          <div class="scale-row scale-row--2"><span class="scale-badge">II</span><span class="scale-desc">Начальные отклонения</span><span class="scale-val">0.040–0.044</span></div>
-          <div class="scale-row scale-row--3"><span class="scale-badge">III</span><span class="scale-desc">Средний уровень</span><span class="scale-val">0.045–0.049</span></div>
-          <div class="scale-row scale-row--4"><span class="scale-badge">IV</span><span class="scale-desc">Существенные отклонения</span><span class="scale-val">0.050–0.054</span></div>
-          <div class="scale-row scale-row--5"><span class="scale-badge">V</span><span class="scale-desc">Критическое состояние</span><span class="scale-val">&gt; 0.054</span></div>
-        </div>
-        <h3 style="margin-top:24px">Хлорофилльный индекс</h3>
-        <div class="scale-rows">
-          <div class="scale-row scale-row--1"><span class="scale-badge chl-badge">🌿</span><span class="scale-desc">Высокий</span><span class="scale-val">&gt; 0.15</span></div>
-          <div class="scale-row scale-row--2"><span class="scale-badge chl-badge">🍃</span><span class="scale-desc">Средний</span><span class="scale-val">0.05–0.15</span></div>
-          <div class="scale-row scale-row--3"><span class="scale-badge chl-badge">🍂</span><span class="scale-desc">Пониженный</span><span class="scale-val">−0.05–0.05</span></div>
-          <div class="scale-row scale-row--4"><span class="scale-badge chl-badge">🟡</span><span class="scale-desc">Низкий (стресс)</span><span class="scale-val">&lt; −0.05</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="site-footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div class="footer-brand"><div class="logo"><span class="logo-leaf">🌿</span><span class="logo-text">ЭкоАнализ</span></div><p>Оценка качества окружающей среды методом флуктуирующей асимметрии и хлорофилльного индекса листьев растений.</p></div>
-      <div class="footer-col"><h4>Контакты</h4><p>ГУО «Гимназия №25 имени Риммы Шершнёвой г. Минска»</p><p>Научный руководитель:<br><strong>Корнеенко Ольга Сергеевна</strong></p></div>
-      <div class="footer-col"><h4>Навигация</h4><a href="#about">О проекте</a><a href="#instructions">Инструкция</a><a href="#analysis">Анализ</a><a href="#map">Карта</a><a href="#comparison">Сравнение</a><a href="#recommendations">Рекомендации</a><a href="#methodology">Методология</a></div>
-    </div>
-    <div class="footer-bottom"><p>© 2025 Проект «Оценка качества среды методом флуктуирующей асимметрии»</p></div>
-  </div>
-</footer>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js"></script>
+    </noscript>
 </body>
 </html>
