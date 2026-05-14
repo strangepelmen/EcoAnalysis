@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ЭкоАнализ | Оценка качества среды</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="global-animation"></div>
+    
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">
+                    <span class="logo-icon">🌿</span>
+                    <span class="logo-text">ЭкоАнализ</span>
+                </a>
+                
+                <nav id="main-nav">
+                    <ul>
+                        <li><a href="#about" class="nav-link">О проекте</a></li>
+                        <li><a href="#instructions" class="nav-link">Инструкция</a></li>
+                        <li><a href="#analysis" class="nav-link">Анализ</a></li>
+                        <li><a href="#map" class="nav-link">Карта</a></li>
+                        <li><a href="#methodology" class="nav-link">Методология</a></li>
+                        <li class="theme-toggle-item">
+                            <div class="theme-toggle-container">
+                                <label class="theme-toggle">
+                                    <input type="checkbox" id="themeToggle">
+                                    <span class="toggle-slider">
+                                        <div class="toggle-icons">
+                                            <span class="sun">☀️</span>
+                                            <span class="moon">🌙</span>
+                                        </div>
+                                    </span>
+                                </label>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                
+                <button class="mobile-menu-btn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-background">
+            <div class="floating-element el-1">🍃</div>
+            <div class="floating-element el-2">🌱</div>
+            <div class="floating-element el-3">🍂</div>
+            <div class="floating-element el-4">🌿</div>
+            <div class="floating-element el-5">✨</div>
+            <div class="floating-element el-6">⭐</div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="fade-in">Оценка качества среды</h1>
+                <p class="fade-in delay-1">Метод флуктуирующей асимметрии листьев растений семейства Ивовые</p>
+                <a href="#analysis" class="btn pulse fade-in delay-2">Начать анализ</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="about">
+        <div class="container">
+            <h2 class="section-title fade-in">О проекте</h2>
+            <div class="card fade-in delay-1">
+                <div class="card-icon">🔬</div>
+                <p>Этот сайт позволяет провести оценку качества окружающей среды с помощью метода флуктуирующей асимметрии листьев растений семейства Ивовые (Salicaceae).</p>
+                <p class="mt-2">Проект основан на работе Киткевича Дениса, ученика 8 "Б" класса ГУО "Гимназия №25 имени Риммы Шершнёвой г. Минска".</p>
+                <p class="mt-2">Присоединяясь к проекту, вы помогаете создать масштабную картину экологического состояния различных регионов.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="instructions" class="section-alt">
+        <div class="container">
+            <h2 class="section-title fade-in">Как принять участие</h2>
+            <div class="steps-container">
+                <div class="step card fade-in">
+                    <div class="step-icon">🌳</div>
+                    <h3>Найдите растение</h3>
+                    <p>Для исследования подходят представители семейства Ивовые: Ива Белая, Ива Козья или Тополь Бальзамический.</p>
+                </div>
+                <div class="step card fade-in delay-1">
+                    <div class="step-icon">📸</div>
+                    <h3>Сфотографируйте лист</h3>
+                    <p>Снимите лист на контрастном фоне. Убедитесь, что лист хорошо освещен и полностью виден.</p>
+                </div>
+                <div class="step card fade-in delay-2">
+                    <div class="step-icon">📁</div>
+                    <h3>Загрузите фото</h3>
+                    <p>Используйте форму на сайте для загрузки фотографии. Наш алгоритм автоматически определит контур листа.</p>
+                </div>
+                <div class="step card fade-in delay-3">
+                    <div class="step-icon">📊</div>
+                    <h3>Получите результат</h3>
+                    <p>Система определит параметры флуктуирующей асимметрии и оценит качество среды в точке сбора.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="analysis">
+        <div class="container">
+            <h2 class="section-title fade-in">Анализ листа</h2>
+            <div class="card fade-in">
+                <p>Загрузите фотографию листа для автоматического анализа. Система определит параметры флуктуирующей асимметрии и оценит качество среды.</p>
+                
+                <div class="plant-selection">
+                    <h3>Выберите вид растения:</h3>
+                    <div class="plant-options">
+                        <button class="plant-option" data-plant="salix-alba">
+                            <span class="plant-icon">🌳</span>
+                            Ива Белая
+                        </button>
+                        <button class="plant-option" data-plant="salix-caprea">
+                            <span class="plant-icon">🍃</span>
+                            Ива Козья
+                        </button>
+                        <button class="plant-option" data-plant="populus-balsamifera">
+                            <span class="plant-icon">🌲</span>
+                            Тополь Бальзамический
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="upload-section">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📁</div>
+                        <h3>Перетащите сюда фотографию листа</h3>
+                        <p>или</p>
+                        <button class="btn" id="uploadBtn">Выбрать файл</button>
+                        <input type="file" id="fileInput" accept="image/*" class="hidden">
+                    </div>
+                    
+                    <div id="imagePreviewContainer" class="hidden">
+                        <div class="preview-content">
+                            <h3>Предпросмотр</h3>
+                            <div class="preview-image-container">
+                                <img id="imagePreview" class="preview-image">
+                            </div>
+                            <button class="btn analyze-btn" id="analyzeBtn">Проанализировать</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="analysisVisualization" class="hidden">
+                    <h3>Процесс анализа</h3>
+                    <div class="analysis-steps">
+                        <div class="analysis-step" id="step1">
+                            <div class="step-indicator"></div>
+                            <h4><span class="status-icon">⏳</span> Сегментация листа</h4>
+                            <p>Выделение контурa листа и отделение от фона...</p>
+                        </div>
+                        <div class="analysis-step" id="step2">
+                            <div class="step-indicator"></div>
+                            <h4><span class="status-icon">⏳</span> Определение центральной оси</h4>
+                            <p>Нахождение центральной жилки и оси симметрии листа...</p>
+                        </div>
+                        <div class="analysis-step" id="step3">
+                            <div class="step-indicator"></div>
+                            <h4><span class="status-icon">⏳</span> Измерение параметров</h4>
+                            <p>Измерение ширины листа, длины жилок и углов...</p>
+                        </div>
+                        <div class="analysis-step" id="step4">
+                            <div class="step-indicator"></div>
+                            <h4><span class="status-icon">⏳</span> Расчет асимметрии</h4>
+                            <p>Вычисление относительной асимметрии для каждого параметра...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-visualization-content">
+                        <div class="leaf-animation">
+                            <div class="leaf-shape">
+                                <div class="vein"></div>
+                                <div class="vein vein-2"></div>
+                                <div class="vein vein-3"></div>
+                                <div class="pulse-ring"></div>
+                                <div class="pulse-ring ring-2"></div>
+                                <div class="pulse-ring ring-3"></div>
+                            </div>
+                        </div>
+                        <p class="animation-text">Анализ в процессе...</p>
+                    </div>
+                </div>
+                
+                <div id="loadingIndicator" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Идет анализ изображения...</p>
+                </div>
+                
+                <div id="resultContainer" class="hidden">
+                    <div class="success-animation">
+                        <div class="success-check">✓</div>
+                    </div>
+                    <h3>Результаты анализа</h3>
+                    <div id="qualityResult" class="result"></div>
+                    
+                    <h4>Измеренные параметры</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Параметр</th>
+                                <th>Левая сторона</th>
+                                <th>Правая сторона</th>
+                                <th>Относительная асимметрия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="parametersTable">
+                            <!-- Данные будут заполнены скриптом -->
+                        </tbody>
+                    </table>
+                    
+                    <div id="locationSection" class="mt-2">
+                        <h4>Добавить на карту</h4>
+                        <p>Поделитесь результатом анонимно, чтобы помочь создать общую картину качества среды в вашем регионе.</p>
+                        <div class="action-buttons">
+                            <button class="btn" id="addToMapBtn">Добавить на карту</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="map" class="section-alt">
+        <div class="container">
+            <h2 class="section-title fade-in">Карта качества среды</h2>
+            <div class="card fade-in">
+                <div class="card-icon">🗺️</div>
+                <p>На этой карте отображаются анонимные результаты всех пользователей, создавая общую картину экологического состояния.</p>
+                <div id="mapContainer" class="map-container mt-2"></div>
+                <div class="text-center mt-2">
+                    <button class="btn btn-outline" id="clearMapBtn">Очистить карту</button>
+                    <button class="btn btn-outline" id="exportDataBtn">Экспорт данных</button>
+                    <button class="btn btn-outline" id="importDataBtn">Импорт данных</button>
+                    <button class="btn btn-outline" id="loadServerDataBtn">Загрузить с сервера</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="methodology">
+        <div class="container">
+            <h2 class="section-title fade-in">Методология исследования</h2>
+            <div class="card fade-in">
+                <div class="card-icon">📚</div>
+                <p>Метод флуктуирующей асимметрии разработан В.М. Захаровым и основан на измерении небольших случайных отклонений от билатеральной симметрии у организмов.</p>
+                
+                <h4 class="mt-2">Измеряемые параметры</h4>
+                <ol class="mt-2 methodology-list">
+                    <li>Ширина левой и правой половинок листа</li>
+                    <li>Длина второй жилки второго порядка</li>
+                    <li>Расстояние между основаниями первой и второй жилок второго порядка</li>
+                    <li>Расстояние между концами первой и второй жилок второго порядка</li>
+                    <li>Угол между главной жилкой и второй от основания листа жилкой второго порядка</li>
+                </ol>
+                
+                <h4 class="mt-2">Оценочная шкала</h4>
+                <table class="mt-2">
+                    <thead>
+                        <tr>
+                            <th>Балл</th>
+                            <th>Качество среды</th>
+                            <th>Флуктуирующая асимметрия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>I</td>
+                            <td>Условно нормальное</td>
+                            <td>&lt; 0,040</td>
+                        </tr>
+                        <tr>
+                            <td>II</td>
+                            <td>Начальные отклонения от нормы</td>
+                            <td>0,040-0,044</td>
+                        </tr>
+                        <tr>
+                            <td>III</td>
+                            <td>Средний уровень отклонения</td>
+                            <td>0,045-0,049</td>
+                        </tr>
+                        <tr>
+                            <td>IV</td>
+                            <td>Существенные отклонения от нормы</td>
+                            <td>0,050-0,054</td>
+                        </tr>
+                        <tr>
+                            <td>V</td>
+                            <td>Критическое состояние</td>
+                            <td>&gt; 0,054</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>🌿 ЭкоАнализ</h3>
+                    <p>Оценка качества окружающей среды методом флуктуирующей асимметрии листьев растений семейства Ивовые.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>📞 Контакты</h3>
+                    <p>ГУО "Гимназия №25 имени Риммы Шершнёвой г. Минска"</p>
+                    <p>Научный руководитель: Корнеенко Ольга Сергеевна</p>
+                </div>
+                <div class="footer-section">
+                    <h3>🔗 Ссылки</h3>
+                    <a href="#about" class="footer-link">О проекте</a>
+                    <a href="#instructions" class="footer-link">Инструкция</a>
+                    <a href="#analysis" class="footer-link">Анализ</a>
+                    <a href="#map" class="footer-link">Карта</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Проект "Оценка качества среды методом флуктуирующей асимметрии"</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Canvas для анализа изображения -->
+    <canvas id="analysisCanvas" class="hidden"></canvas>
+
+    <!-- Скрытый input для импорта данных -->
+    <input type="file" id="importFileInput" accept=".json" class="hidden">
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
