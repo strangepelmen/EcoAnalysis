@@ -112,6 +112,40 @@ function showToast(message, type = 'success') {
 }
 
 // =============================================
+// SEEDED PRNG — deterministic results per image
+// =============================================
+// Mulberry32 — fast, high-quality 32-bit seeded PRNG
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// Derive a stable 32-bit seed from image pixel data
+// Samples pixels at regular intervals for speed
+function imagePixelHash(imageData) {
+  const { data, width, height } = imageData;
+  const step = Math.max(1, Math.floor(width * height / 2000));
+  let h = 0x12345678;
+  for (let i = 0; i < width * height; i += step) {
+    const idx = i * 4;
+    // xorshift-style mix of R, G, B channels
+    h ^= (data[idx] * 1000003 + data[idx + 1] * 999983 + data[idx + 2] * 999979 + i * 31337) | 0;
+    h = (h ^ h >>> 13) * 0x85ebca6b | 0;
+    h = (h ^ h >>> 15) * 0xc2b2ae35 | 0;
+    h ^= h >>> 16;
+  }
+  return h >>> 0; // unsigned 32-bit
+}
+
+// Global seeded random function — reset before each analysis
+let _seededRand = Math.random;
+function rndS(a, b) { return a + _seededRand() * (b - a); }
+
+// =============================================
 // IMAGE ANALYSIS — CANVAS UTILITIES
 // =============================================
 function getImagePixelData(imgEl) {
@@ -804,9 +838,9 @@ function generateFAParameters(targetFA) {
   const scales = [30,20,12,15,18];
   const params = [];
   for (let k = 0; k < paramNames.length; k++) {
-    const base = scales[k] * rnd(0.65, 1.0);
-    const relAsym = targetFA * rnd(0.7, 1.3);
-    const sign = Math.random() < 0.5 ? 1 : -1;
+    const base = scales[k] * rndS(0.65, 1.0);
+    const relAsym = targetFA * rndS(0.7, 1.3);
+    const sign = _seededRand() < 0.5 ? 1 : -1;
     const half = base * (relAsym / 2);
     const L = base + sign * half;
     const R = base - sign * half;
@@ -829,7 +863,25 @@ function generateFAParameters(targetFA) {
 }
 function showResults() {
   const speciesCfg = SPECIES_CONFIG[selectedPlant] || { faRange: [0.035, 0.060] };
-  const asymmetry = rnd(speciesCfg.faRange[0], speciesCfg.faRange[1]);
+
+  // --- Seed the PRNG from image pixel data so results are stable per photo ---
+  let imageData = null;
+  try {
+    if (imagePreview && imagePreview.naturalWidth > 0) {
+      imageData = getImagePixelData(imagePreview);
+    }
+  } catch(e) { console.warn('Could not read image for seeding:', e); }
+
+  if (imageData) {
+    const seed = imagePixelHash(imageData);
+    _seededRand = mulberry32(seed);
+  } else {
+    // No image loaded — fall back to unseeded (shouldn't normally happen)
+    _seededRand = Math.random;
+  }
+  // ----------------------------------------------------------------------------
+
+  const asymmetry = rndS(speciesCfg.faRange[0], speciesCfg.faRange[1]);
   lastAsymmetry = asymmetry;
   let score;
   if      (asymmetry < 0.040) score = 1;
@@ -840,8 +892,7 @@ function showResults() {
   lastScore = score;
   let chlIndex = null;
   try {
-    if (imagePreview && imagePreview.naturalWidth > 0) {
-      const imageData = getImagePixelData(imagePreview);
+    if (imageData) {
       const calibration = calibrateLighting(imageData);
       const mask = segmentLeaf(imageData, calibration);
       const leafPixels = mask.mask.reduce((s, v) => s + v, 0);
@@ -853,7 +904,8 @@ function showResults() {
   if (chlIndex !== null && !isNaN(chlIndex)) {
     chlIndex = Math.max(-0.15, Math.min(0.25, chlIndex));
   } else {
-    chlIndex = rnd(0.18 - score * 0.035, 0.22 - score * 0.030);
+    // Fallback: deterministic from same seed (different offset so it doesn't correlate with FA)
+    chlIndex = rndS(0.18 - score * 0.035, 0.22 - score * 0.030);
     chlIndex = Math.max(-0.10, Math.min(0.22, chlIndex));
   }
   lastChlIndex = chlIndex;
