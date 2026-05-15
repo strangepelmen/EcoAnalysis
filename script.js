@@ -48,9 +48,6 @@ function applyTheme(dark) {
   document.body.classList.toggle('dark-theme', dark);
   localStorage.setItem('theme', dark ? 'dark' : 'light');
   document.querySelectorAll('#themeToggle, #themeToggleMobile').forEach(el => el.checked = dark);
-  // Синхронизируем theme-color Safari с цветом хедера
-  const metaTheme = document.getElementById('themeColorMeta');
-  if (metaTheme) metaTheme.setAttribute('content', dark ? '#08130a' : '#f4f9f4');
 }
 document.querySelectorAll('#themeToggle, #themeToggleMobile').forEach(el => {
   el.addEventListener('change', () => applyTheme(el.checked));
