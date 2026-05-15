@@ -50,7 +50,7 @@ function applyTheme(dark) {
   document.querySelectorAll('#themeToggle, #themeToggleMobile').forEach(el => el.checked = dark);
   // Обновляем theme-color для Safari (Dynamic Island / статус-бар)
   const metaTheme = document.getElementById('themeColorMeta');
-  if (metaTheme) metaTheme.setAttribute('content', dark ? '#08130a' : '#fdfaf5');
+  if (metaTheme) metaTheme.setAttribute('content', dark ? '#08130a' : '#f4f9f4');
 }
 document.querySelectorAll('#themeToggle, #themeToggleMobile').forEach(el => {
   el.addEventListener('change', () => applyTheme(el.checked));
