@@ -220,18 +220,11 @@ body::after {
 
 /* ═══════════════════════════════════════════════
    HEADER — FLOATING SLAB EDITION
+   Опак. Никаких blur/transparency. Дорого.
    ═══════════════════════════════════════════════ */
 :root {
   --header-h: 68px;
-  /* Светлая тема */
-  --hbg:      #f4f9f4;
-  --htext:    rgba(30,80,45,0.55);
-  --htext-on: #1a3d25;
-  --hgreen:   #16803d;
-  --hgreen-d: #0f5c2b;
-}
-.dark-theme {
-  --hbg:      #08130a;
+  --hbg:      #08130a;          /* почти чёрный зелёный */
   --htext:    rgba(194,222,198,0.62);
   --htext-on: #dff0e2;
   --hgreen:   #4eba72;
@@ -243,34 +236,32 @@ body::after {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1000;
-  /* Высота = контент + зона safe area (Dynamic Island / чёлка) */
   height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
   background: var(--hbg);
-  border-bottom: 1px solid rgba(22,128,61,0.12);
-  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  /* Никаких border-top — только нижний разделитель */
+  border-bottom: 1px solid rgba(78,186,114,0.13);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   -webkit-transform: translate3d(0,0,0);
   transform: translate3d(0,0,0);
-  transition: background var(--transition),
-              box-shadow 0.35s var(--ease-out),
+  transition: box-shadow 0.35s var(--ease-out),
               border-color 0.35s var(--ease-out);
-}
-.dark-theme .site-header {
-  border-bottom-color: rgba(78,186,114,0.13);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+  /* Убираем все ::before / ::after украшения */
 }
 .site-header::before,
 .site-header::after { display: none; content: none; }
 
 .site-header.scrolled {
-  box-shadow: 0 4px 24px rgba(0,0,0,0.09);
-  border-bottom-color: rgba(22,128,61,0.18);
-}
-.dark-theme .site-header.scrolled {
   box-shadow: 0 12px 56px rgba(0,0,0,0.62);
   border-bottom-color: rgba(78,186,114,0.22);
 }
 
-/* ── Внутренний ряд — сдвинут вниз на высоту safe area ── */
+/* Один фон для обеих тем */
+body:not(.dark-theme) .site-header,
+.dark-theme .site-header { background: var(--hbg); }
+
+/* ── Внутренний ряд ── */
 .header-inner {
   display: flex;
   align-items: center;
@@ -279,10 +270,7 @@ body::after {
   max-width: 1160px;
   margin: 0 auto;
   padding: 0 36px;
-  /* Ключевое: padding-top сдвигает контент вниз, а фон хедера
-     при этом уже физически занимает всю зону safe area */
-  padding-top: env(safe-area-inset-top, 0px);
-  box-sizing: content-box;
+  margin-top: env(safe-area-inset-top, 0px);
 }
 
 /* ── ЛОГОТИП ── */
@@ -453,13 +441,10 @@ body::after {
 .burger span {
   display: block;
   height: 1.5px;
-  background: rgba(30,80,45,0.65);
+  background: rgba(194,222,198,0.8);
   border-radius: 2px;
   transition: all 0.28s var(--ease-out);
   transform-origin: center;
-}
-.dark-theme .burger span {
-  background: rgba(194,222,198,0.8);
 }
 .burger span:nth-child(1) { width: 100%; }
 .burger span:nth-child(2) { width: 70%; }
@@ -739,16 +724,19 @@ body::after {
   gap: 18px;
   align-items: flex-start;
   justify-content: center;
+  padding-top: 16px; /* место чтобы выступающие номера не обрезались секцией */
 }
 .step {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: 30px 26px 28px;
+  padding-top: 42px; /* место для выступающего номера */
   flex: 1 1 200px;
   max-width: 248px;
   text-align: center;
   position: relative;
+  overflow: visible; /* номер должен выступать за край */
   transition: transform 0.26s var(--ease-out), box-shadow 0.26s var(--ease-out);
 }
 .step:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
@@ -1944,7 +1932,7 @@ a, button, .btn, .nav-link, .burger, .theme-toggle,
 
 .site-footer { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
-.about-card, .rec-card, .step, .result-card {
+.about-card, .rec-card, .result-card {
   -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
