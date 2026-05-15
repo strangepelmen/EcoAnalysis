@@ -243,18 +243,27 @@ body::after {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1000;
-  /* Высота = контент + зона safe area (Dynamic Island / чёлка) */
-  height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
-  background: var(--hbg);
+
+  /*
+   * КРИТИЧНО для Safari / Dynamic Island:
+   * 1. padding-top — фон хедера физически заполняет зону safe area.
+   *    (margin-top не работает — там будет дыра с прозрачностью)
+   * 2. Нет transform/will-change — они выносят элемент в отдельный
+   *    GPU-слой, и Safari перестаёт брать цвет для Dynamic Island.
+   * 3. background должен быть СТРОГО непрозрачным HEX — никакого rgba/hsla.
+   *    Safari сэмплирует computed color ближайшего fixed-элемента.
+   */
+  padding-top: env(safe-area-inset-top, 0px);
+  background-color: #f4f9f4;   /* светлая тема — тот же цвет что --hbg */
   border-bottom: 1px solid rgba(22,128,61,0.12);
   box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-  -webkit-transform: translate3d(0,0,0);
-  transform: translate3d(0,0,0);
-  transition: background var(--transition),
+  transition: background-color var(--transition),
               box-shadow 0.35s var(--ease-out),
               border-color 0.35s var(--ease-out);
 }
+/* Тёмная тема — меняем background-color напрямую */
 .dark-theme .site-header {
+  background-color: #08130a;
   border-bottom-color: rgba(78,186,114,0.13);
   box-shadow: 0 8px 40px rgba(0,0,0,0.45);
 }
@@ -263,26 +272,22 @@ body::after {
 
 .site-header.scrolled {
   box-shadow: 0 4px 24px rgba(0,0,0,0.09);
-  border-bottom-color: rgba(22,128,61,0.18);
 }
 .dark-theme .site-header.scrolled {
   box-shadow: 0 12px 56px rgba(0,0,0,0.62);
-  border-bottom-color: rgba(78,186,114,0.22);
 }
 
-/* ── Внутренний ряд — сдвинут вниз на высоту safe area ── */
+/* ── Внутренний ряд ── */
 .header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: var(--header-h);
+  height: var(--header-h);   /* высота самого контента без safe area */
   max-width: 1160px;
   margin: 0 auto;
-  padding: 0 36px;
-  /* Ключевое: padding-top сдвигает контент вниз, а фон хедера
-     при этом уже физически занимает всю зону safe area */
-  padding-top: env(safe-area-inset-top, 0px);
-  box-sizing: content-box;
+  padding-left: 36px;
+  padding-right: 36px;
+  /* margin-top здесь НЕ используем — сдвиг делает padding-top на .site-header */
 }
 
 /* ── ЛОГОТИП ── */
