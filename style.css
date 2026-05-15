@@ -224,7 +224,16 @@ body::after {
    ═══════════════════════════════════════════════ */
 :root {
   --header-h: 68px;
-  --hbg:      #08130a;          /* почти чёрный зелёный */
+  /* Светлая тема */
+  --hbg:      #f4f9f4;
+  --htext:    rgba(30,80,45,0.55);
+  --htext-on: #1a3d25;
+  --hgreen:   #16803d;
+  --hgreen-d: #0f5c2b;
+}
+/* Тёмная тема */
+.dark-theme {
+  --hbg:      #08130a;
   --htext:    rgba(194,222,198,0.62);
   --htext-on: #dff0e2;
   --hgreen:   #4eba72;
@@ -238,28 +247,33 @@ body::after {
   z-index: 1000;
   height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
   background: var(--hbg);
-  /* Никаких border-top — только нижний разделитель */
-  border-bottom: 1px solid rgba(78,186,114,0.13);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+  border-bottom: 1px solid rgba(22,128,61,0.12);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   -webkit-transform: translate3d(0,0,0);
   transform: translate3d(0,0,0);
-  transition: box-shadow 0.35s var(--ease-out),
+  transition: background var(--transition),
+              box-shadow 0.35s var(--ease-out),
               border-color 0.35s var(--ease-out);
-  /* Убираем все ::before / ::after украшения */
+}
+.dark-theme .site-header {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+  border-bottom-color: rgba(78,186,114,0.13);
 }
 .site-header::before,
 .site-header::after { display: none; content: none; }
 
 .site-header.scrolled {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.09);
+  border-bottom-color: rgba(22,128,61,0.18);
+}
+.dark-theme .site-header.scrolled {
   box-shadow: 0 12px 56px rgba(0,0,0,0.62);
   border-bottom-color: rgba(78,186,114,0.22);
 }
 
-/* Один фон для обеих тем */
-body:not(.dark-theme) .site-header,
-.dark-theme .site-header { background: var(--hbg); }
+/* Один фон для обеих тем — управляется через --hbg */
 
 /* ── Внутренний ряд ── */
 .header-inner {
@@ -441,10 +455,13 @@ body:not(.dark-theme) .site-header,
 .burger span {
   display: block;
   height: 1.5px;
-  background: rgba(194,222,198,0.8);
+  background: rgba(30,80,45,0.65);
   border-radius: 2px;
   transition: all 0.28s var(--ease-out);
   transform-origin: center;
+}
+.dark-theme .burger span {
+  background: rgba(194,222,198,0.8);
 }
 .burger span:nth-child(1) { width: 100%; }
 .burger span:nth-child(2) { width: 70%; }
