@@ -724,26 +724,26 @@ body:not(.dark-theme) .site-header,
   gap: 18px;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 16px; /* место чтобы выступающие номера не обрезались секцией */
+  padding-top: 18px; /* место для выступающих номеров */
 }
 .step {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: 30px 26px 28px;
-  padding-top: 42px; /* место для выступающего номера */
+  padding-top: 20px;
   flex: 1 1 200px;
   max-width: 248px;
   text-align: center;
   position: relative;
-  overflow: visible; /* номер должен выступать за край */
+  margin-top: 16px; /* отступ сверху — номер "плавает" над блоком в этом пространстве */
   transition: transform 0.26s var(--ease-out), box-shadow 0.26s var(--ease-out);
 }
 .step:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
 .step__number {
   position: absolute;
-  top: -13px; left: 50%;
-  transform: translateX(-50%);
+  top: 0; left: 50%;
+  transform: translate(-50%, -50%);
   background: linear-gradient(135deg, var(--green-600), var(--green-800));
   color: white;
   font-size: 11px;
@@ -752,6 +752,7 @@ body:not(.dark-theme) .site-header,
   padding: 3px 14px;
   border-radius: 100px;
   box-shadow: 0 2px 8px rgba(21,128,61,0.3);
+  z-index: 1;
 }
 .step__icon {
   font-size: 38px;
